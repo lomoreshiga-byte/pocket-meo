@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Pocket MEO - デモ</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    
+    .pb-safe {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    
+    .pt-safe {
+      padding-top: env(safe-area-inset-top);
+    }
+  </style>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#3B82F6',
+            'primary-foreground': '#ffffff',
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-gray-50">
+  <!-- ダッシュボード画面 -->
+  <div id="dashboard" class="min-h-screen bg-gradient-to-b from-white to-gray-100">
+    <!-- ヘッダー -->
+    <div class="bg-blue-500 text-white pt-safe">
+      <div class="p-6 pb-8">
+        <h1 class="text-2xl font-bold">ダッシュボード</h1>
+        <p class="text-blue-100 mt-1">今日も1日お疲れ様です 👋</p>
+      </div>
+    </div>
+
+    <!-- アクションカード -->
+    <div class="px-4 -mt-4 space-y-3 pb-6">
+      <!-- 未返信クチコミ -->
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-all cursor-pointer" onclick="showReviews()">
+        <div class="p-4">
+          <div class="flex items-start justify-between">
+            <div class="flex items-center gap-3">
+              <div class="p-2 rounded-lg bg-blue-50">
+                <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
+                </svg>
+              </div>
+              <div>
+                <h3 class="text-lg font-semibold">未返信のクチコミ</h3>
+                <p class="text-sm text-gray-500 mt-1">早めの返信でお客様との信頼を築きましょう</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="bg-blue-500 text-white px-2.5 py-0.5 rounded-full text-xs font-semibold">3</span>
+              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 本日の投稿予定 -->
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-all cursor-pointer">
+        <div class="p-4">
+          <div class="flex items-start justify-between">
+            <div class="flex items-center gap-3">
+              <div class="p-2 rounded-lg bg-blue-50">
+                <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+              </div>
+              <div>
+                <h3 class="text-lg font-semibold">本日の投稿予定</h3>
+                <p class="text-sm text-gray-500 mt-1">スケジュール済みの投稿を確認</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="bg-blue-500 text-white px-2.5 py-0.5 rounded-full text-xs font-semibold">1</span>
+              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- クイックアクション -->
+    <div class="px-4 py-6 border-t">
+      <h2 class="text-lg font-semibold mb-4">クイックアクション</h2>
+      <div class="grid grid-cols-2 gap-3">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-all cursor-pointer">
+          <div class="p-4 text-center">
+            <div class="w-12 h-12 mx-auto bg-blue-50 rounded-full flex items-center justify-center mb-2">
+              <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+              </svg>
+            </div>
+            <p class="font-medium">新規投稿</p>
+          </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-all cursor-pointer">
+          <div class="p-4 text-center">
+            <div class="w-12 h-12 mx-auto bg-blue-50 rounded-full flex items-center justify-center mb-2">
+              <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+            <p class="font-medium">営業時間</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 left-0 right-0 z-50 border-t bg-white pb-safe">
+      <div class="flex items-center justify-around h-16">
+        <button onclick="showDashboard()" class="flex flex-col items-center justify-center flex-1 h-full gap-1 text-blue-500" id="nav-home">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+          </svg>
+          <span class="text-xs font-medium">ホーム</span>
+        </button>
+        
+        <button onclick="showReviews()" class="flex flex-col items-center justify-center flex-1 h-full gap-1 text-gray-400 hover:text-gray-600" id="nav-reviews">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
+          </svg>
+          <span class="text-xs font-medium">クチコミ</span>
+        </button>
+        
+        <button class="flex flex-col items-center justify-center flex-1 h-full gap-1 text-gray-400 hover:text-gray-600">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+          </svg>
+          <span class="text-xs font-medium">投稿</span>
+        </button>
+        
+        <button class="flex flex-col items-center justify-center flex-1 h-full gap-1 text-gray-400 hover:text-gray-600">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+          </svg>
+          <span class="text-xs font-medium">設定</span>
+        </button>
+      </div>
+    </nav>
+  </div>
+
+  <!-- クチコミ画面（非表示） -->
+  <div id="reviews" class="min-h-screen bg-white hidden">
+    <!-- ヘッダー -->
+    <div class="bg-blue-500 text-white pt-safe sticky top-0 z-10">
+      <div class="p-4">
+        <div class="flex items-center justify-between mb-3">
+          <h1 class="text-2xl font-bold">クチコミ</h1>
+          <span class="bg-white text-blue-500 px-3 py-1 rounded-full text-sm font-semibold">未返信 3件</span>
+        </div>
+        
+        <!-- フィルター -->
+        <div class="flex gap-2 overflow-x-auto pb-2">
+          <button class="bg-white text-blue-500 px-4 py-1.5 rounded-md text-sm font-medium whitespace-nowrap">すべて</button>
+          <button class="text-white/80 px-4 py-1.5 rounded-md text-sm font-medium whitespace-nowrap hover:bg-blue-600">未返信のみ</button>
+          <button class="text-white/80 px-4 py-1.5 rounded-md text-sm font-medium whitespace-nowrap hover:bg-blue-600">高評価</button>
+          <button class="text-white/80 px-4 py-1.5 rounded-md text-sm font-medium whitespace-nowrap hover:bg-blue-600">低評価</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- クチコミリスト -->
+    <div class="p-4 space-y-3 pb-20">
+      <!-- クチコミカード1 -->
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 space-y-3">
+        <div class="flex items-start gap-3">
+          <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold">田</div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 mb-1">
+              <p class="font-semibold text-sm">田中太郎</p>
+            </div>
+            
+            <!-- 星評価 -->
+            <div class="flex items-center gap-2 mb-2">
+              <div class="flex">
+                <svg class="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                <svg class="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                <svg class="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                <svg class="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                <svg class="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              </div>
+              <span class="text-xs text-gray-500">2時間前</span>
+            </div>
+            
+            <!-- コメント -->
+            <p class="text-sm leading-relaxed">素晴らしいサービスでした！スタッフの方々も親切で、料理も美味しかったです。また来たいと思います。</p>
+          </div>
+        </div>
+
+        <!-- AI返信ボタン -->
+        <button onclick="showAIModal()" class="w-full border border-gray-300 rounded-md px-4 py-2 text-sm font-medium hover:bg-gray-50 flex items-center justify-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
+          </svg>
+          AI返信を生成
+        </button>
+      </div>
+
+      <!-- クチコミカード2 -->
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 space-y-3">
+        <div class="flex items-start gap-3">
+          <div class="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center text-pink-600 font-semibold">佐</div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 mb-1">
+              <p class="font-semibold text-sm">佐藤花子</p>
+            </div>
+            
+            <div class="flex items-center gap-2 mb-2">
+              <div class="flex">
+                <svg class="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                <svg class="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                <svg class="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                <svg class="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                <svg class="w-4 h-4 text-gray-300 fill-current" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              </div>
+              <span class="text-xs text-gray-500">5時間前</span>
+            </div>
+            
+            <p class="text-sm leading-relaxed">雰囲気が良くて居心地が良かったです。ただ、少し待ち時間が長かったのが残念でした。</p>
+          </div>
+        </div>
+
+        <button onclick="showAIModal()" class="w-full border border-gray-300 rounded-md px-4 py-2 text-sm font-medium hover:bg-gray-50 flex items-center justify-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
+          </svg>
+          AI返信を生成
+        </button>
+      </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 left-0 right-0 z-50 border-t bg-white pb-safe">
+      <div class="flex items-center justify-around h-16">
+        <button onclick="showDashboard()" class="flex flex-col items-center justify-center flex-1 h-full gap-1 text-gray-400 hover:text-gray-600">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+          </svg>
+          <span class="text-xs font-medium">ホーム</span>
+        </button>
+        
+        <button onclick="showReviews()" class="flex flex-col items-center justify-center flex-1 h-full gap-1 text-blue-500">
+          <svg class="w-6 h-6 scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
+          </svg>
+          <span class="text-xs font-medium">クチコミ</span>
+        </button>
+        
+        <button class="flex flex-col items-center justify-center flex-1 h-full gap-1 text-gray-400 hover:text-gray-600">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+          </svg>
+          <span class="text-xs font-medium">投稿</span>
+        </button>
+        
+        <button class="flex flex-col items-center justify-center flex-1 h-full gap-1 text-gray-400 hover:text-gray-600">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+          </svg>
+          <span class="text-xs font-medium">設定</span>
+        </button>
+      </div>
+    </nav>
+  </div>
+
+  <!-- AI返信生成モーダル -->
+  <div id="aiModal" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden" onclick="hideAIModal()">
+    <div class="fixed inset-x-0 bottom-0 z-50 bg-white rounded-t-3xl shadow-2xl pb-safe" onclick="event.stopPropagation()">
+      <!-- ヘッダー -->
+      <div class="flex items-center justify-between p-4 border-b">
+        <div class="flex items-center gap-2">
+          <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
+          </svg>
+          <h3 class="font-semibold">AI返信を生成</h3>
+        </div>
+        <button onclick="hideAIModal()" class="p-2 hover:bg-gray-100 rounded-lg">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
+        <!-- 元のレビュー -->
+        <div class="bg-gray-50 rounded-lg p-3">
+          <div class="flex gap-1 mb-2">
+            <svg class="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <svg class="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <svg class="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <svg class="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <svg class="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          </div>
+          <p class="text-sm">素晴らしいサービスでした！スタッフの方々も親切で、料理も美味しかったです。</p>
+        </div>
+
+        <!-- トーン選択 -->
+        <div>
+          <p class="text-sm font-medium mb-2">返信のトーンを選択</p>
+          <div class="grid grid-cols-3 gap-2">
+            <button class="border-2 border-blue-500 bg-blue-50 rounded-lg py-3 flex flex-col items-center gap-1">
+              <span class="text-2xl">🙏</span>
+              <span class="text-xs font-medium">感謝</span>
+            </button>
+            <button class="border border-gray-300 rounded-lg py-3 flex flex-col items-center gap-1 hover:bg-gray-50">
+              <span class="text-2xl">🙇</span>
+              <span class="text-xs font-medium">謝罪</span>
+            </button>
+            <button class="border border-gray-300 rounded-lg py-3 flex flex-col items-center gap-1 hover:bg-gray-50">
+              <span class="text-2xl">😊</span>
+              <span class="text-xs font-medium">フレンドリー</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- アクションボタン -->
+        <button class="w-full bg-blue-500 text-white rounded-md px-4 py-3 text-sm font-medium hover:bg-blue-600 flex items-center justify-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
+          </svg>
+          返信を生成
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showDashboard() {
+      document.getElementById('dashboard').classList.remove('hidden');
+      document.getElementById('reviews').classList.add('hidden');
+      updateNav('home');
+    }
+
+    function showReviews() {
+      document.getElementById('dashboard').classList.add('hidden');
+      document.getElementById('reviews').classList.remove('hidden');
+      updateNav('reviews');
+    }
+
+    function updateNav(active) {
+      // Reset all nav items
+      document.querySelectorAll('nav button').forEach(btn => {
+        btn.classList.remove('text-blue-500');
+        btn.classList.add('text-gray-400');
+      });
+      
+      // Activate selected
+      if (active === 'home') {
+        document.getElementById('nav-home')?.classList.add('text-blue-500');
+        document.getElementById('nav-home')?.classList.remove('text-gray-400');
+      } else if (active === 'reviews') {
+        const reviewsNav = document.querySelectorAll('nav button')[1];
+        reviewsNav?.classList.add('text-blue-500');
+        reviewsNav?.classList.remove('text-gray-400');
+      }
+    }
+
+    function showAIModal() {
+      document.getElementById('aiModal').classList.remove('hidden');
+    }
+
+    function hideAIModal() {
+      document.getElementById('aiModal').classList.add('hidden');
+    }
+  </script>
+</body>
+</html>
