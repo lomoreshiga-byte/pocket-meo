@@ -12,25 +12,45 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-        const { rating, keywords, comment } = await request.json()
+        const {
+            visitCount,
+            visitTime,
+            visitScene,
+            rating,
+            foodRating,
+            serviceRating,
+            atmosphereRating,
+            costRating,
+            bestPoint,
+            comment
+        } = await request.json()
 
         const promptText = `
 あなたはプロのコピーライターです。
-以下のアンケート結果を元に、Googleマップに投稿するための自然で好意的な口コミ文を生成してください。
-ユーザー（顧客）になりきって書いてください。
+以下の詳細なアンケート結果を元に、Googleビジネスプロフィールに投稿するための自然で好意的な口コミ文を生成してください。
+ユーザー（顧客）になりきって、実体験に基づいた感想として書いてください。
 
 【アンケート結果】
-評価: ${rating}/5
-良かった点: ${keywords?.join(', ') || '特になし'}
-自由記述: ${comment || '特になし'}
+- 来店回数: ${visitCount}
+- 来店日時: ${visitTime}
+- 利用シーン: ${visitScene}
+- 総合評価: ${rating}/5
+- 料理・ドリンク: ${foodRating}/5
+- 接客・サービス: ${serviceRating}/5
+- 雰囲気: ${atmosphereRating}/5
+- コスパ: ${costRating}/5
+- 一番良かった点: ${bestPoint || '特になし'}
+- ご意見・ご感想: ${comment || '特になし'}
 
 【条件】
-- 自然な日本語であること
-- 絵文字を適度に使用して親しみやすくすること
-- 150文字〜200文字程度
-- 指定された「良かった点」や「自由記述」の内容を必ず盛り込むこと
+- 自然な日本語（丁寧語・ですます調）であること
+- 絵文字は一切使用しないこと
+- 堅苦しすぎず、かつ失礼のない適度な丁寧さを保つこと
+- 200文字〜300文字程度
+- 具体的な評価項目（料理、接客、雰囲気など）に触れること
+- 「一番良かった点」は必ず強調して書くこと
+- 総合評価が高い場合は、他の人にもおすすめするような結びの言葉を入れること
 - 嘘や誇張は書かないこと
-- 評価が低い場合でも、ポジティブな表現に変換するか、建設的な意見として書くこと
 `
 
         // モデル選択ロジック（generate-replyと同じ）

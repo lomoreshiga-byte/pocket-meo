@@ -86,7 +86,7 @@ export default function PublicSurveyPage() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 p-4 pb-20 font-sans">
+        <div className="min-h-screen bg-slate-50 p-4 pb-20">
             <div className="max-w-md mx-auto space-y-6">
                 <header className="text-center py-6 space-y-2">
                     <h1 className="text-xl font-bold tracking-tight text-slate-900">アンケートにご協力ください</h1>
