@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { fetchGBPAccounts, fetchGBPLocations, fetchLocationInsights } from '@/lib/google-api'
+import { fetchGBPAccounts, fetchGBPLocations, fetchLocationInsights, fetchLocationSearchKeywords } from '@/lib/google-api'
 
 export async function GET(request: Request) {
     const authHeader = request.headers.get('Authorization')
@@ -41,12 +41,17 @@ export async function GET(request: Request) {
         // 3. インサイト取得
         const insights = await fetchLocationInsights(accessToken, locationId, startDate, endDate)
 
+        // 4. 検索キーワード取得
+        // NOTE: startDate/endDateはYYYY-MM-DD形式だが、fetchLocationSearchKeywords内で適切に処理されることを想定
+        const searchKeywords = await fetchLocationSearchKeywords(accessToken, locationId, startDate, endDate)
+
         return NextResponse.json({
             location: {
                 title: location.title,
                 storeCode: location.storeCode,
             },
-            insights: insights
+            insights: insights,
+            searchKeywords: searchKeywords
         })
 
     } catch (error: any) {
