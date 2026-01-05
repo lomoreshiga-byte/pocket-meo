@@ -7,47 +7,62 @@ export interface InstagramMedia {
     timestamp: string
 }
 
-// モックデータ: 本来はInstagram Graph APIから取得する
-const MOCK_INSTAGRAM_MEDIA: InstagramMedia[] = [
-    {
-        id: '17928374650123456',
-        caption: '新作のカプチーノです☕️\n#カフェ #コーヒー #ラテアート',
-        media_type: 'IMAGE',
-        media_url: '/mock-instagram-1.jpg', // プレースホルダー画像
-        permalink: 'https://www.instagram.com/p/mock1/',
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1日前
-    },
-    {
-        id: '17928374650123457',
-        caption: '春の限定メニュー、桜もちパンケーキ🌸\n来週からスタートです！',
-        media_type: 'IMAGE',
-        media_url: '/mock-instagram-2.jpg',
-        permalink: 'https://www.instagram.com/p/mock2/',
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(), // 3時間前
-    }
-]
+const GRAPH_API_BASE = 'https://graph.facebook.com/v19.0'
 
 export async function fetchInstagramMedia(accessToken: string): Promise<InstagramMedia[]> {
-    // 実際のAPIコールの代わりにモックデータを返す
-    // 本番では: https://graph.instagram.com/me/media?fields=id,caption,media_type,media_url,permalink,timestamp&access_token=...
-    console.log('Fetching Instagram media with token:', accessToken)
+    try {
+        // 1. Facebookページと紐付いたInstagramビジネスアカウントIDを取得
+        const accountsRes = await fetch(`${GRAPH_API_BASE}/me/accounts?fields=instagram_business_account,name,access_token&access_token=${accessToken}`)
 
-    // ネットワーク遅延をシミュレート
-    await new Promise(resolve => setTimeout(resolve, 800))
+        if (!accountsRes.ok) {
+            const err = await accountsRes.json()
+            console.error('FB Accounts Error:', err)
+            throw new Error(`Failed to fetch FB accounts: ${err.error?.message}`)
+        }
 
-    return MOCK_INSTAGRAM_MEDIA
+        const accountsData = await accountsRes.json()
+
+        // instagram_business_accountを持つ最初のページを探す
+        const pageWithIg = accountsData.data?.find((page: any) => page.instagram_business_account)
+
+        if (!pageWithIg) {
+            console.warn('No connected Instagram Business Account found')
+            return []
+        }
+
+        const igBusinessId = pageWithIg.instagram_business_account.id
+        console.log('Found Instagram Business ID:', igBusinessId)
+
+        // 2. Instagramのメディアを取得
+        const mediaRes = await fetch(`${GRAPH_API_BASE}/${igBusinessId}/media?fields=id,caption,media_type,media_url,permalink,timestamp,thumbnail_url&access_token=${accessToken}`)
+
+        if (!mediaRes.ok) {
+            const err = await mediaRes.json()
+            console.error('IG Media Error:', err)
+            throw new Error(`Failed to fetch IG media: ${err.error?.message}`)
+        }
+
+        const mediaData = await mediaRes.json()
+        return mediaData.data as InstagramMedia[]
+
+    } catch (error) {
+        console.error('fetchInstagramMedia Error:', error)
+        throw error
+    }
 }
 
 export async function fetchInstagramMediaDetails(mediaId: string, accessToken: string): Promise<InstagramMedia | null> {
-    console.log('Fetching media details for:', mediaId)
-    // モック: IDが一致するものを探す（なければ適当なものを返す）
-    const media = MOCK_INSTAGRAM_MEDIA.find(m => m.id === mediaId)
-    return media || {
-        id: mediaId,
-        caption: '自動連携された投稿です✨',
-        media_type: 'IMAGE',
-        media_url: '/mock-instagram-1.jpg',
-        permalink: `https://www.instagram.com/p/${mediaId}/`,
-        timestamp: new Date().toISOString()
+    try {
+        const res = await fetch(`${GRAPH_API_BASE}/${mediaId}?fields=id,caption,media_type,media_url,permalink,timestamp,thumbnail_url&access_token=${accessToken}`)
+
+        if (!res.ok) {
+            return null
+        }
+
+        const data = await res.json()
+        return data as InstagramMedia
+    } catch (error) {
+        console.error('fetchInstagramMediaDetails Error:', error)
+        return null
     }
 }
