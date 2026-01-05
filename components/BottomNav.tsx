@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Star, PenSquare, Settings } from 'lucide-react'
+import { Home, Star, PenSquare, Menu } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const navItems = [
@@ -22,9 +22,9 @@ const navItems = [
         icon: PenSquare,
     },
     {
-        label: '設定',
-        href: '/settings',
-        icon: Settings,
+        label: 'メニュー',
+        href: '/menu',
+        icon: Menu,
     },
 ]
 

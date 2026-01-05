@@ -70,7 +70,7 @@ export default function LocationPage() {
                     {/* <TabsTrigger value="photos">写真</TabsTrigger> */}
                 </TabsList>
 
-                <TabsContent value="basic" className="space-y-6">
+                <TabsContent value="basic" className="space-y-6 pb-20">
                     <Card>
                         <CardHeader>
                             <CardTitle>基本情報</CardTitle>
@@ -133,7 +133,7 @@ export default function LocationPage() {
                     </Card>
                 </TabsContent>
 
-                <TabsContent value="hours">
+                <TabsContent value="hours" className="pb-20">
                     <Card>
                         <CardHeader>
                             <CardTitle>営業時間</CardTitle>
