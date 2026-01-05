@@ -1,179 +1,122 @@
 'use client'
 
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
+import { useState, useEffect } from 'react'
+import QRCode from 'react-qr-code'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Printer, Share, Copy, ExternalLink } from 'lucide-react'
+import { toast } from 'sonner'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { Slider } from '@/components/ui/slider'
-import { Sparkles, Copy, Check, Star } from 'lucide-react'
-import { toast } from 'sonner'
 
-export default function SurveyPage() {
-    const [loading, setLoading] = useState(false)
-    const [rating, setRating] = useState(5)
-    const [keywords, setKeywords] = useState<string[]>([])
-    const [comment, setComment] = useState('')
-    const [generatedReview, setGeneratedReview] = useState('')
+export default function SurveyDashboardPage() {
+    const [surveyUrl, setSurveyUrl] = useState('')
 
-    const predefinedKeywords = [
-        '美味しい', '接客が良い', '雰囲気が良い', '提供が早い',
-        '価格が手頃', '清潔', '駅チカ', 'おしゃれ'
-    ]
-
-    const toggleKeyword = (keyword: string) => {
-        if (keywords.includes(keyword)) {
-            setKeywords(keywords.filter(k => k !== keyword))
-        } else {
-            setKeywords([...keywords, keyword])
+    useEffect(() => {
+        // クライアントサイドでURLを生成
+        if (typeof window !== 'undefined') {
+            const url = `${window.location.origin}/s`
+            setSurveyUrl(url)
         }
+    }, [])
+
+    const copyUrl = () => {
+        navigator.clipboard.writeText(surveyUrl)
+        toast.success('URLをコピーしました')
     }
 
-    const handleGenerate = async () => {
-        setLoading(true)
-        setGeneratedReview('') // Reset previous result
-
-        try {
-            const response = await fetch('/api/ai/generate-review', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    rating,
-                    keywords,
-                    comment
-                })
-            })
-
-            const data = await response.json()
-
-            if (!response.ok) {
-                throw new Error(data.error || '口コミの生成に失敗しました')
-            }
-
-            setGeneratedReview(data.review)
-            toast.success('口コミが生成されました！')
-        } catch (error: any) {
-            console.error('Error generating review:', error)
-            toast.error(error.message || 'エラーが発生しました')
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    const copyToClipboard = () => {
-        navigator.clipboard.writeText(generatedReview)
-        toast.success('クリップボードにコピーしました')
+    const printPage = () => {
+        window.print()
     }
 
     return (
-        <div className="space-y-6 max-w-2xl mx-auto pb-20">
+        <div className="space-y-6 pb-20">
             <div className="flex flex-col gap-2">
-                <h1 className="text-2xl font-bold tracking-tight">アンケート入力</h1>
+                <h1 className="text-2xl font-bold tracking-tight">アンケート管理</h1>
                 <p className="text-muted-foreground">
-                    お客様の満足度や感想を入力すると、AIが自然な口コミ文を自動生成します。
+                    お客様に以下のQRコードを読み取っていただくことで、AIによる口コミ生成機能を提供できます。
                 </p>
             </div>
 
-            <Card>
-                <CardHeader>
-                    <CardTitle>評価を入力</CardTitle>
-                    <CardDescription>お客様の率直な感想を入力してください</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                    {/* 星評価 */}
-                    <div className="space-y-3">
-                        <Label>総合評価: {rating}点</Label>
-                        <div className="flex items-center gap-2">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                                <button
-                                    key={star}
-                                    type="button"
-                                    onClick={() => setRating(star)}
-                                    className={`transition-all hover:scale-110 ${star <= rating ? 'text-amber-400' : 'text-slate-200'}`}
-                                >
-                                    <Star className="w-8 h-8 fill-current" />
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* キーワード選択 */}
-                    <div className="space-y-3">
-                        <Label>良かった点 (複数選択可)</Label>
-                        <div className="flex flex-wrap gap-2">
-                            {predefinedKeywords.map((kw) => (
-                                <button
-                                    key={kw}
-                                    type="button"
-                                    onClick={() => toggleKeyword(kw)}
-                                    className={`
-                                        px-3 py-1.5 rounded-full text-sm border transition-all
-                                        ${keywords.includes(kw)
-                                            ? 'bg-primary text-primary-foreground border-primary hover:bg-primary/90'
-                                            : 'bg-background hover:bg-muted'
-                                        }
-                                    `}
-                                >
-                                    {kw}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* 自由コメント */}
-                    <div className="space-y-3">
-                        <Label>自由コメント (任意)</Label>
-                        <Textarea
-                            placeholder="その他、具体的な感想があれば入力してください..."
-                            value={comment}
-                            onChange={(e) => setComment(e.target.value)}
-                            className="resize-none h-24"
-                        />
-                    </div>
-
-                    <Button
-                        onClick={handleGenerate}
-                        disabled={loading}
-                        className="w-full h-12 text-lg font-bold gap-2"
-                    >
-                        {loading ? (
-                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
-                        ) : (
-                            <>
-                                <Sparkles className="w-5 h-5" />
-                                AIで口コミを生成する
-                            </>
-                        )}
-                    </Button>
-                </CardContent>
-            </Card>
-
-            {/* 生成結果 */}
-            {generatedReview && (
-                <Card className="border-primary/50 bg-primary/5">
-                    <CardHeader className="pb-3">
-                        <CardTitle className="flex justify-between items-center text-lg">
-                            <span>生成された口コミ</span>
-                            <Button variant="outline" size="sm" onClick={copyToClipboard} className="gap-2">
-                                <Copy className="w-4 h-4" />
-                                コピー
-                            </Button>
-                        </CardTitle>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* QRコードカード */}
+                <Card className="overflow-hidden">
+                    <CardHeader className="bg-slate-50 border-b">
+                        <CardTitle>店頭用QRコード</CardTitle>
+                        <CardDescription>
+                            このQRコードを印刷して、テーブルやレジ横に設置してください。
+                        </CardDescription>
                     </CardHeader>
-                    <CardContent>
-                        <div className="bg-background p-4 rounded-md border text-sm leading-relaxed whitespace-pre-wrap">
-                            {generatedReview}
+                    <CardContent className="p-8 flex flex-col items-center gap-6">
+                        <div className="bg-white p-4 rounded-xl border-4 border-slate-900 shadow-sm">
+                            {surveyUrl ? (
+                                <QRCode
+                                    value={surveyUrl}
+                                    size={200}
+                                    style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                                    viewBox={`0 0 256 256`}
+                                />
+                            ) : (
+                                <div className="w-[200px] h-[200px] bg-slate-100 animate-pulse rounded-md" />
+                            )}
                         </div>
-                        <div className="mt-4 flex flex-col gap-2">
-                            <p className="text-xs text-muted-foreground text-center">
-                                Googleマップなどの投稿画面に貼り付けて使用してください
-                            </p>
-                            {/* 将来的にはここにGBPへの直接リンクなどを配置 */}
+
+                        <div className="text-center space-y-1">
+                            <p className="font-bold text-lg">アンケートにご協力ください</p>
+                            <p className="text-sm text-muted-foreground">カメラで読み取って回答を作成</p>
+                        </div>
+
+                        <div className="flex w-full gap-3 mt-2 print:hidden">
+                            <Button className="flex-1 gap-2" variant="outline" onClick={printPage}>
+                                <Printer className="w-4 h-4" />
+                                印刷する
+                            </Button>
+                            {/* <Button className="flex-1 gap-2" disabled>
+                                <Share className="w-4 h-4" />
+                                シェア
+                            </Button> */}
                         </div>
                     </CardContent>
                 </Card>
-            )}
+
+                {/* URL共有カード */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle>直接リンク</CardTitle>
+                        <CardDescription>
+                            SNSやメールで送る場合はこちらのURLを使用してください。
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                            <Label>アンケートURL</Label>
+                            <div className="flex gap-2">
+                                <Input value={surveyUrl} readOnly className="bg-slate-50 font-mono" />
+                                <Button size="icon" variant="outline" onClick={copyUrl}>
+                                    <Copy className="w-4 h-4" />
+                                </Button>
+                            </div>
+                        </div>
+
+                        <div className="pt-4 border-t">
+                            <h3 className="font-medium mb-2">活用アドバイス</h3>
+                            <ul className="text-sm text-muted-foreground space-y-2 list-disc pl-4">
+                                <li>お会計時のレシートと一緒にQRコードを渡す</li>
+                                <li>各テーブルにPOPとして設置する</li>
+                                <li>LINE公式アカウントのリッチメニューにリンクを設定する</li>
+                            </ul>
+                        </div>
+
+                        <div className="pt-4">
+                            <Button variant="link" className="p-0 h-auto gap-1 text-blue-600" asChild>
+                                <a href="/s" target="_blank" rel="noopener noreferrer">
+                                    実際の画面を確認する <ExternalLink className="w-3 h-3" />
+                                </a>
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
         </div>
     )
 }
