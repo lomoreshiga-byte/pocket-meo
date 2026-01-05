@@ -1,8 +1,12 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter } from 'next/font/google'
+import { M_PLUS_Rounded_1c } from 'next/font/google'
 import './globals.css'
 
-const inter = Inter({ subsets: ['latin'] })
+const mPlusRounded1c = M_PLUS_Rounded_1c({
+    weight: ['100', '300', '400', '500', '700', '800', '900'],
+    subsets: ['latin'],
+    display: 'swap',
+})
 
 export const metadata: Metadata = {
     title: 'Pocket MEO - シンプルなMEO管理ツール',
@@ -30,7 +34,7 @@ export default function RootLayout({
 }) {
     return (
         <html lang="ja" className="scroll-smooth">
-            <body className={inter.className}>
+            <body className={mPlusRounded1c.className}>
                 {children}
             </body>
         </html>
