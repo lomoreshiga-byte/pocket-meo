@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
+    Home,
+    Star,
     LayoutDashboard,
     PenSquare,
     Settings,
