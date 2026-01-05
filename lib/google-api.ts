@@ -11,7 +11,11 @@ export async function fetchGBPAccounts(accessToken: string) {
         },
     })
 
-    if (!res.ok) throw new Error('Failed to fetch GBP accounts')
+    if (!res.ok) {
+        const errorText = await res.text()
+        console.error(`GBP Accounts API Error: ${res.status}`, errorText)
+        throw new Error(`Failed to fetch GBP accounts: ${res.status} ${errorText}`)
+    }
     return res.json()
 }
 
@@ -25,7 +29,11 @@ export async function fetchGBPLocations(accessToken: string, accountId: string) 
         },
     })
 
-    if (!res.ok) throw new Error('Failed to fetch GBP locations')
+    if (!res.ok) {
+        const errorText = await res.text()
+        console.error(`GBP Locations API Error: ${res.status}`, errorText)
+        throw new Error(`Failed to fetch GBP locations: ${res.status} ${errorText}`)
+    }
     return res.json()
 }
 
