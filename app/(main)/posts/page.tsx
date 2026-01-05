@@ -10,7 +10,6 @@ import { formatDate } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
 import { fetchInstagramMedia, InstagramMedia } from '@/lib/instagram-api'
 import { createGBPPost, fetchGBPAccounts, fetchGBPLocations } from '@/lib/google-api'
-import { toast } from 'sonner' // Assuming sonner or use a simple alert for now if toast not installed, but let's use window.alert if not sure. Actually better to use local state for status.
 
 const mockGbpPosts: Post[] = [
     {
