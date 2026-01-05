@@ -11,13 +11,20 @@ const GRAPH_API_BASE = 'https://graph.facebook.com/v19.0'
 
 export async function fetchInstagramMedia(accessToken: string): Promise<InstagramMedia[]> {
     try {
+        const url = `${GRAPH_API_BASE}/me/accounts?fields=instagram_business_account,name,access_token&access_token=${accessToken}`
         // 1. Facebookページと紐付いたInstagramビジネスアカウントIDを取得
-        const accountsRes = await fetch(`${GRAPH_API_BASE}/me/accounts?fields=instagram_business_account,name,access_token&access_token=${accessToken}`)
+        const accountsRes = await fetch(url)
 
         if (!accountsRes.ok) {
-            const err = await accountsRes.json()
-            console.error('FB Accounts Error:', err)
-            throw new Error(`Failed to fetch FB accounts: ${err.error?.message}`)
+            let errorDetail = ''
+            try {
+                const err = await accountsRes.json()
+                errorDetail = err.error?.message || JSON.stringify(err)
+            } catch (e) {
+                errorDetail = await accountsRes.text()
+            }
+            console.error('FB Accounts Error:', errorDetail)
+            throw new Error(`FB API Error (${accountsRes.status}): ${errorDetail} | Token: ${accessToken.substring(0, 10)}... | URL: ${url.replace(accessToken, '***')}`)
         }
 
         const accountsData = await accountsRes.json()
