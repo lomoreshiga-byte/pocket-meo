@@ -14,11 +14,11 @@ interface ActionCardProps {
 
 function ActionCard({ title, description, icon, badge, href, variant = 'default' }: ActionCardProps) {
     return (
-        <Link href={href}>
-            <Card className={`transition-all hover:shadow-md active:scale-[0.98] ${variant === 'warning' ? 'border-destructive/50 bg-destructive/5' : ''
+        <Link href={href} className="h-full block">
+            <Card className={`h-full transition-all hover:shadow-md active:scale-[0.98] ${variant === 'warning' ? 'border-destructive/50 bg-destructive/5' : ''
                 }`}>
                 <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between">
+                    <div className="flex items-start justify-between h-full">
                         <div className="flex items-center gap-3">
                             <div className={`p-2 rounded-lg ${variant === 'warning' ? 'bg-destructive/10' : 'bg-primary/10'
                                 }`}>
@@ -58,9 +58,6 @@ export default function DashboardPage() {
             <div className="bg-primary text-primary-foreground pt-safe md:bg-transparent md:text-foreground md:pt-0 md:mb-8">
                 <div className="p-6 pb-8 md:p-0">
                     <h1 className="text-2xl font-bold">ダッシュボード</h1>
-                    <p className="text-primary-foreground/80 mt-1 md:text-muted-foreground">
-                        今日も1日お疲れ様です 👋
-                    </p>
                 </div>
             </div>
 
