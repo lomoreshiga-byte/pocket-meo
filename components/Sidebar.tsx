@@ -3,7 +3,16 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Home, Star, PenSquare, Settings, LogOut, User, BarChart3 } from 'lucide-react'
+import {
+    LayoutDashboard,
+    PenSquare,
+    Settings,
+    Store,
+    LogOut,
+    User,
+    BarChart3,
+    AlertCircle
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
