@@ -275,45 +275,43 @@ export default function AnalyticsPage() {
                         </div>
                     </CardContent>
                 </Card>
-            </Card>
-        </div>
-
-            {/* 検索クエリランキング */ }
-    <Card>
-        <CardHeader>
-            <CardTitle>検索クエリランキング (上位キーワード)</CardTitle>
-            <CardDescription>
-                どんなキーワードでお店が検索されているか
-            </CardDescription>
-        </CardHeader>
-        <CardContent>
-            {!data.topKeywords || data.topKeywords.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground text-sm">
-                    <p>キーワードデータがありません</p>
-                </div>
-            ) : (
-                <div className="overflow-x-auto">
-                    <table className="w-full text-sm text-left">
-                        <thead className="text-muted-foreground border-b">
-                            <tr>
-                                <th className="py-2 px-4 font-medium">順位</th>
-                                <th className="py-2 px-4 font-medium">キーワード</th>
-                                <th className="py-2 px-4 font-medium text-right">表示回数</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {data.topKeywords.map((keyword, index) => (
-                                <tr key={index} className="border-b last:border-0 hover:bg-muted/50 transition-colors">
-                                    <td className="py-3 px-4 w-16 text-muted-foreground">{index + 1}</td>
-                                    <td className="py-3 px-4 font-medium">{keyword.term}</td>
-                                    <td className="py-3 px-4 text-right">{keyword.value.toLocaleString()}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            )}
-        </CardContent>
-    </Card>
-    )
+                {/* 検索クエリランキング */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle>検索クエリランキング (上位キーワード)</CardTitle>
+                        <CardDescription>
+                            どんなキーワードでお店が検索されているか
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {!data.topKeywords || data.topKeywords.length === 0 ? (
+                            <div className="text-center py-8 text-muted-foreground text-sm">
+                                <p>キーワードデータがありません</p>
+                            </div>
+                        ) : (
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-sm text-left">
+                                    <thead className="text-muted-foreground border-b">
+                                        <tr>
+                                            <th className="py-2 px-4 font-medium">順位</th>
+                                            <th className="py-2 px-4 font-medium">キーワード</th>
+                                            <th className="py-2 px-4 font-medium text-right">表示回数</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {data.topKeywords.map((keyword, index) => (
+                                            <tr key={index} className="border-b last:border-0 hover:bg-muted/50 transition-colors">
+                                                <td className="py-3 px-4 w-16 text-muted-foreground">{index + 1}</td>
+                                                <td className="py-3 px-4 font-medium">{keyword.term}</td>
+                                                <td className="py-3 px-4 text-right">{keyword.value.toLocaleString()}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+            </div>
+            )
 }
