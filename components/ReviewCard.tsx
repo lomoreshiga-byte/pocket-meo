@@ -68,10 +68,17 @@ export function ReviewCard({ review, onReplySubmit }: ReviewCardProps) {
                 {/* 返信エリア */}
                 {review.replied && review.replyText ? (
                     <div className="bg-muted/50 rounded-lg p-3 ml-13 relative group">
-                        <div className="flex justify-between items-start">
-                            <p className="text-xs font-semibold text-muted-foreground mb-1">
-                                あなたの返信
-                            </p>
+                        <div className="flex justify-between items-center mb-1">
+                            <div className="flex items-center gap-2">
+                                <p className="text-xs font-semibold text-muted-foreground">
+                                    あなたの返信
+                                </p>
+                                {review.repliedAt && (
+                                    <span className="text-xs text-muted-foreground/60">
+                                        {formatDate(review.repliedAt)}
+                                    </span>
+                                )}
+                            </div>
                             <Button
                                 variant="ghost"
                                 size="sm"
@@ -89,11 +96,6 @@ export function ReviewCard({ review, onReplySubmit }: ReviewCardProps) {
                             </Button>
                         </div>
                         <p className="text-sm border-l-2 border-primary/20 pl-2">{review.replyText}</p>
-                        {review.repliedAt && (
-                            <p className="text-xs text-muted-foreground mt-1 text-right">
-                                {formatDate(review.repliedAt)}
-                            </p>
-                        )}
                     </div>
                 ) : (
                     <Button
