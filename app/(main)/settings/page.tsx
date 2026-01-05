@@ -5,16 +5,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { ChevronRight, Clock, AlertCircle, LogOut } from 'lucide-react'
+import { ChevronRight, LogOut } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
 export default function SettingsPage() {
-    const [isTemporarilyClosed, setIsTemporarilyClosed] = useState(false)
     const [email, setEmail] = useState('')
     const [loading, setLoading] = useState(true)
-    const [updating, setUpdating] = useState(false)
     const router = useRouter()
 
     useEffect(() => {
@@ -25,21 +23,6 @@ export default function SettingsPage() {
                 if (user?.email) {
                     setEmail(user.email)
                 }
-
-                // GBP情報の取得
-                const { data: gbpInfo, error } = await supabase
-                    .from('gbp_info')
-                    .select('is_temporarily_closed')
-                    .eq('user_id', user?.id)
-                    .single()
-
-                if (error && error.code !== 'PGRST116') { // PGRST116: data not found
-                    console.error('Error fetching GBP info:', error)
-                }
-
-                if (gbpInfo) {
-                    setIsTemporarilyClosed(gbpInfo.is_temporarily_closed)
-                }
             } catch (error) {
                 console.error('Error loading settings:', error)
             } finally {
@@ -49,59 +32,6 @@ export default function SettingsPage() {
 
         fetchData()
     }, [])
-
-    const handleToggleClosed = async () => {
-        const newValue = !isTemporarilyClosed
-        setIsTemporarilyClosed(newValue)
-        setUpdating(true)
-
-        try {
-            const { data: { user } } = await supabase.auth.getUser()
-            if (!user) return
-
-            // まず既存のレコードを確認
-            const { data: existingData } = await supabase
-                .from('gbp_info')
-                .select('id')
-                .eq('user_id', user.id)
-                .single()
-
-            let error;
-
-            if (existingData) {
-                // 更新
-                const { error: updateError } = await supabase
-                    .from('gbp_info')
-                    .update({
-                        is_temporarily_closed: newValue,
-                        updated_at: new Date().toISOString()
-                    })
-                    .eq('user_id', user.id)
-                error = updateError
-            } else {
-                // 新規作成
-                const { error: insertError } = await supabase
-                    .from('gbp_info')
-                    .insert({
-                        user_id: user.id,
-                        is_temporarily_closed: newValue,
-                        updated_at: new Date().toISOString()
-                    })
-                error = insertError
-            }
-
-            if (error) {
-                console.error('Error updating status:', error)
-                // エラー時は戻す
-                setIsTemporarilyClosed(!newValue)
-            }
-        } catch (error) {
-            console.error('Error updating status:', error)
-            setIsTemporarilyClosed(!newValue)
-        } finally {
-            setUpdating(false)
-        }
-    }
 
     const handleLogout = async () => {
         await supabase.auth.signOut()
@@ -126,66 +56,6 @@ export default function SettingsPage() {
             </div>
 
             <div className="p-4 space-y-6">
-                {/* クイック設定 */}
-                <section>
-                    <h2 className="text-lg font-semibold mb-3">クイック設定</h2>
-
-                    {/* 臨時休業 */}
-                    <Card className={isTemporarilyClosed ? 'border-destructive/50' : ''}>
-                        <CardHeader className="pb-3">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className={`p-2 rounded-lg ${isTemporarilyClosed ? 'bg-destructive/10' : 'bg-muted'
-                                        }`}>
-                                        <AlertCircle className={`w-5 h-5 ${isTemporarilyClosed ? 'text-destructive' : 'text-muted-foreground'
-                                            }`} />
-                                    </div>
-                                    <div>
-                                        <CardTitle className="text-base">臨時休業</CardTitle>
-                                        <CardDescription className="text-sm">
-                                            {isTemporarilyClosed ? '現在休業中です' : '通常営業中'}
-                                            {updating && <span className="ml-2 text-xs text-muted-foreground">(更新中...)</span>}
-                                        </CardDescription>
-                                    </div>
-                                </div>
-                                <button
-                                    onClick={handleToggleClosed}
-                                    disabled={updating}
-                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isTemporarilyClosed ? 'bg-destructive' : 'bg-muted'
-                                        } ${updating ? 'opacity-50' : ''}`}
-                                >
-                                    <span
-                                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isTemporarilyClosed ? 'translate-x-6' : 'translate-x-1'
-                                            }`}
-                                    />
-                                </button>
-                            </div>
-                        </CardHeader>
-                    </Card>
-
-                    {/* 営業時間 */}
-                    <Link href="/settings/hours">
-                        <Card className="mt-3 hover:shadow-md transition-shadow">
-                            <CardHeader className="pb-3">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className="p-2 rounded-lg bg-muted">
-                                            <Clock className="w-5 h-5 text-muted-foreground" />
-                                        </div>
-                                        <div>
-                                            <CardTitle className="text-base">営業時間</CardTitle>
-                                            <CardDescription className="text-sm">
-                                                平日 9:00 - 18:00
-                                            </CardDescription>
-                                        </div>
-                                    </div>
-                                    <ChevronRight className="w-5 h-5 text-muted-foreground" />
-                                </div>
-                            </CardHeader>
-                        </Card>
-                    </Link>
-                </section>
-
                 {/* アカウント情報 */}
                 <section>
                     <h2 className="text-lg font-semibold mb-3">アカウント</h2>
@@ -214,11 +84,6 @@ export default function SettingsPage() {
                     <h2 className="text-lg font-semibold mb-3">詳細設定</h2>
 
                     <div className="space-y-2">
-                        <SettingItem
-                            label="店舗情報"
-                            description="住所、電話番号、カテゴリ"
-                            href="/settings/business-info"
-                        />
                         <SettingItem
                             label="API連携"
                             description="GBP、Instagram、Gemini"
