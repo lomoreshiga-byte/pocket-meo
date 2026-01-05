@@ -83,7 +83,7 @@ export default function SettingsPage() {
                 <section>
                     <h2 className="text-lg font-semibold mb-3">詳細設定</h2>
 
-                    <div className="space-y-2">
+                    <div className="space-y-4">
                         <SettingItem
                             label="API連携"
                             description="GBP、Instagram、Gemini"
@@ -123,7 +123,7 @@ function SettingItem({
     href: string
 }) {
     return (
-        <Link href={href}>
+        <Link href={href} className="block">
             <Card className="hover:shadow-md transition-shadow">
                 <CardContent className="p-4">
                     <div className="flex items-center justify-between">
