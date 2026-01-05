@@ -60,13 +60,27 @@ export default function PostsPage() {
                 const formattedPosts = media.map(m => convertIgMediaToPost(m))
                 setIgPosts(formattedPosts)
             } else {
-                // トークンがない場合（Googleログインのみなど）
-                // エラーにはせず、空にしておく（または連携設定を促す）
+                // トークンがない場合
                 console.log('No Facebook provider token found in session')
+                // 連携済みかどうかを確認（identities）
+                const fbIdentity = session?.user?.identities?.find(i => i.provider === 'facebook')
+                if (fbIdentity) {
+                    setError('アクセストークンが取得できませんでした。一度ログアウトして、再度ログインをお試しください。')
+                } else {
+                    // 未連携の場合は通知だけでOK（エラーにはしない）
+                }
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error('Failed to load IG posts:', err)
-            setError('Instagramの投稿を取得できませんでした')
+            let errorMsg = 'Instagramの投稿を取得できませんでした'
+            if (err instanceof Error) {
+                errorMsg = err.message
+            } else if (typeof err === 'object') {
+                errorMsg = JSON.stringify(err)
+            } else {
+                errorMsg = String(err)
+            }
+            setError(`${errorMsg} (Time: ${new Date().toLocaleTimeString()})`)
         } finally {
             setLoading(false)
         }

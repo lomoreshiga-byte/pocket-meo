@@ -26,8 +26,10 @@ export async function fetchInstagramMedia(accessToken: string): Promise<Instagra
         const pageWithIg = accountsData.data?.find((page: any) => page.instagram_business_account)
 
         if (!pageWithIg) {
-            console.warn('No connected Instagram Business Account found')
-            return []
+            console.warn('No connected Instagram Business Account found', accountsData)
+            const count = accountsData.data?.length || 0
+            const names = accountsData.data?.map((p: any) => p.name).join(', ')
+            throw new Error(`リンクされたFacebookページにInstagramビジネスアカウントが見つかりません (検出されたページ: ${names})`)
         }
 
         const igBusinessId = pageWithIg.instagram_business_account.id
