@@ -205,7 +205,7 @@ export default function ReviewsPage() {
                 <div className="px-4 py-3">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                            <h1 className="text-xl font-bold">クチコミ管理 (New)</h1>
+                            <h1 className="text-xl font-bold">クチコミ管理</h1>
                             <Button
                                 variant="secondary"
                                 size="sm"
