@@ -92,17 +92,17 @@ export function ReviewFilter({ onFilterChange, initialConditions }: ReviewFilter
         <div className="bg-background rounded-lg border shadow-sm mb-4 overflow-hidden">
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="w-full flex items-center justify-between p-4 bg-muted/30 hover:bg-muted/50 transition-colors"
+                className="w-full flex items-center justify-between p-4 bg-muted/10 hover:bg-muted/20 transition-colors"
             >
                 <div className="flex items-center gap-2">
-                    <span className="font-semibold text-sm">詳細フィルター</span>
+                    <span className="font-bold text-sm text-foreground/80">絞り込みをする</span>
                     {getActiveCount() > 0 && (
                         <span className="bg-primary text-primary-foreground text-xs px-2 py-0.5 rounded-full">
                             {getActiveCount()}
                         </span>
                     )}
                 </div>
-                {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                {isOpen ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
             </button>
 
             {isOpen && (
