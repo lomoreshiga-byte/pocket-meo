@@ -45,7 +45,7 @@ export default function IntegrationsPage() {
             const { data, error } = await supabase.auth.linkIdentity({
                 provider: 'facebook',
                 options: {
-                    scopes: 'instagram_basic,instagram_content_publish,pages_show_list,pages_read_engagement',
+                    scopes: 'instagram_basic,pages_show_list',
                     redirectTo: `${window.location.origin}/settings/integrations` // 設定画面に戻る
                 }
             })
