@@ -6,13 +6,12 @@ import { MessageSquare, Calendar, AlertCircle, ChevronRight } from 'lucide-react
 interface ActionCardProps {
     title: string
     description: string
-    icon: React.ReactNode
     badge?: number
     href: string
     variant?: 'default' | 'warning'
 }
 
-function ActionCard({ title, description, icon, badge, href, variant = 'default' }: ActionCardProps) {
+function ActionCard({ title, description, badge, href, variant = 'default' }: ActionCardProps) {
     return (
         <Link href={href} className="h-full block">
             <Card className={`h-full transition-all hover:shadow-md active:scale-[0.98] ${variant === 'warning' ? 'border-destructive/50 bg-destructive/5' : ''
@@ -20,10 +19,6 @@ function ActionCard({ title, description, icon, badge, href, variant = 'default'
                 <CardHeader className="pb-3">
                     <div className="flex items-start justify-between h-full">
                         <div className="flex items-center gap-3">
-                            <div className={`p-2 rounded-lg ${variant === 'warning' ? 'bg-destructive/10' : 'bg-primary/10'
-                                }`}>
-                                {icon}
-                            </div>
                             <div>
                                 <CardTitle className="text-lg">{title}</CardTitle>
                                 <CardDescription className="text-sm mt-1">
@@ -67,7 +62,6 @@ export default function DashboardPage() {
                 <ActionCard
                     title="未返信のクチコミ"
                     description="早めの返信でお客様との信頼を築きましょう"
-                    icon={<MessageSquare className="w-5 h-5 text-primary" />}
                     badge={unrepliedReviews}
                     href="/reviews"
                 />
@@ -76,7 +70,6 @@ export default function DashboardPage() {
                 <ActionCard
                     title="本日の投稿予定"
                     description="スケジュール済みの投稿を確認"
-                    icon={<Calendar className="w-5 h-5 text-primary" />}
                     badge={todayPosts}
                     href="/posts"
                 />
@@ -86,7 +79,6 @@ export default function DashboardPage() {
                     <ActionCard
                         title="臨時休業中"
                         description="営業再開時は設定を更新してください"
-                        icon={<AlertCircle className="w-5 h-5 text-destructive" />}
                         href="/settings"
                         variant="warning"
                     />
@@ -100,9 +92,6 @@ export default function DashboardPage() {
                     <Link href="/posts/new">
                         <Card className="transition-all hover:shadow-md active:scale-[0.98] hover:border-primary/50">
                             <CardContent className="p-4 text-center md:py-8">
-                                <div className="w-12 h-12 md:w-16 md:h-16 mx-auto bg-primary/10 rounded-full flex items-center justify-center mb-2 md:mb-4">
-                                    <PenSquare className="w-6 h-6 md:w-8 md:h-8 text-primary" />
-                                </div>
                                 <p className="font-medium md:text-lg">新規投稿</p>
                             </CardContent>
                         </Card>
@@ -111,9 +100,6 @@ export default function DashboardPage() {
                     <Link href="/settings">
                         <Card className="transition-all hover:shadow-md active:scale-[0.98] hover:border-primary/50">
                             <CardContent className="p-4 text-center md:py-8">
-                                <div className="w-12 h-12 md:w-16 md:h-16 mx-auto bg-primary/10 rounded-full flex items-center justify-center mb-2 md:mb-4">
-                                    <Clock className="w-6 h-6 md:w-8 md:h-8 text-primary" />
-                                </div>
                                 <p className="font-medium md:text-lg">営業時間</p>
                             </CardContent>
                         </Card>
