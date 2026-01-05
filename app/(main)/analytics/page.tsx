@@ -2,32 +2,139 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts'
-import { ArrowUpRight, ArrowDownRight, Eye, MousePointerClick, MapPin } from 'lucide-react'
+import { ArrowUpRight, ArrowDownRight, Eye, MousePointerClick, MapPin, Loader2 } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { format, subDays } from 'date-fns'
+import { supabase } from '@/lib/supabase'
 
-// モックデータ (検索・マップ表示回数)
-const viewsData = [
-    { date: '12/1', search: 120, map: 450 },
-    { date: '12/5', search: 132, map: 480 },
-    { date: '12/10', search: 101, map: 510 },
-    { date: '12/15', search: 134, map: 520 },
-    { date: '12/20', search: 90, map: 460 },
-    { date: '12/25', search: 230, map: 610 },
-    { date: '12/30', search: 210, map: 580 },
-]
-
-// モックデータ (アクション数)
-const actionsData = [
-    { name: 'ウェブサイト', value: 45 },
-    { name: 'ルート検索', value: 120 },
-    { name: '通話', value: 28 },
-]
+interface InsightsData {
+    viewsData: any[]
+    actionsData: any[]
+    totalViews: number
+    totalActions: number
+    totalDirections: number
+}
 
 export default function AnalyticsPage() {
+    const [loading, setLoading] = useState(true)
+    const [data, setData] = useState<InsightsData | null>(null)
+    const [error, setError] = useState<string | null>(null)
+
+    useEffect(() => {
+        const fetchInsights = async () => {
+            try {
+                // セッション取得
+                const { data: { session } } = await supabase.auth.getSession()
+                if (!session?.provider_token) {
+                    throw new Error('認証トークンが見つかりません。再ログインしてください。')
+                }
+
+                // 日付範囲 (過去30日)
+                const endDate = new Date()
+                const startDate = subDays(endDate, 30)
+                const startStr = format(startDate, 'yyyy-MM-dd')
+                const endStr = format(endDate, 'yyyy-MM-dd')
+
+                // APIリクエスト
+                const res = await fetch(`/api/google/insights?startDate=${startStr}&endDate=${endStr}`, {
+                    headers: {
+                        Authorization: `Bearer ${session.provider_token}`
+                    }
+                })
+
+                if (!res.ok) {
+                    throw new Error('データの取得に失敗しました')
+                }
+
+                const json = await res.json()
+                processInsights(json.insights)
+
+            } catch (err: any) {
+                console.error(err)
+                setError(err.message)
+            } finally {
+                setLoading(false)
+            }
+        }
+
+        fetchInsights()
+    }, [])
+
+    const processInsights = (insights: any) => {
+        if (!insights.dailyMetrics) return
+
+        let views = []
+        let totalViews = 0
+        let totalActions = 0
+        let totalDirections = 0
+        let websiteClicks = 0
+        let callClicks = 0
+        let directionRequests = 0
+
+        // 日別データの集計
+        for (const dayMetric of insights.dailyMetrics) {
+            const date = `${dayMetric.date.month}/${dayMetric.date.day}`
+            let map = 0
+            let search = 0
+
+            if (dayMetric.dailyMetricValues) {
+                for (const val of dayMetric.dailyMetricValues) {
+                    const v = parseInt(val.value) || 0
+
+                    if (val.metric.includes('MAPS')) map += v
+                    if (val.metric.includes('SEARCH')) search += v
+
+                    if (val.metric === 'WEBSITE_CLICKS') websiteClicks += v
+                    if (val.metric === 'CALL_CLICKS') callClicks += v
+                    if (val.metric === 'BUSINESS_DIRECTION_REQUESTS') directionRequests += v
+                }
+            }
+
+            totalViews += (map + search)
+            views.push({ date, map, search })
+        }
+
+        totalActions = websiteClicks + callClicks + directionRequests
+        totalDirections = directionRequests
+
+        const actions = [
+            { name: 'ウェブサイト', value: websiteClicks },
+            { name: 'ルート検索', value: directionRequests },
+            { name: '通話', value: callClicks },
+        ]
+
+        setData({
+            viewsData: views,
+            actionsData: actions,
+            totalViews,
+            totalActions,
+            totalDirections
+        })
+    }
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center h-96">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+        )
+    }
+
+    if (error) {
+        return (
+            <div className="flex items-center justify-center h-96 text-red-500">
+                <p>{error}</p>
+            </div>
+        )
+    }
+
+    if (!data) return null
+
     return (
         <div className="space-y-6">
             <div>
                 <h1 className="text-2xl font-bold">パフォーマンス分析</h1>
-                <p className="text-muted-foreground">過去30日間のインサイト情報</p>
+                <p className="text-muted-foreground">過去30日間のインサイト情報 (Googleビジネスプロフィール)</p>
             </div>
 
             {/* 重要指標サマリー */}
@@ -38,14 +145,8 @@ export default function AnalyticsPage() {
                         <Eye className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">3,610</div>
-                        <p className="text-xs text-muted-foreground flex items-center mt-1">
-                            <span className="text-emerald-500 flex items-center mr-1">
-                                <ArrowUpRight className="h-3 w-3 mr-0.5" />
-                                +12.3%
-                            </span>
-                            先月比
-                        </p>
+                        <div className="text-2xl font-bold">{data.totalViews.toLocaleString()}</div>
+                        <p className="text-xs text-muted-foreground mt-1">過去30日間</p>
                     </CardContent>
                 </Card>
                 <Card>
@@ -54,14 +155,8 @@ export default function AnalyticsPage() {
                         <MousePointerClick className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">193</div>
-                        <p className="text-xs text-muted-foreground flex items-center mt-1">
-                            <span className="text-emerald-500 flex items-center mr-1">
-                                <ArrowUpRight className="h-3 w-3 mr-0.5" />
-                                +5.1%
-                            </span>
-                            先月比
-                        </p>
+                        <div className="text-2xl font-bold">{data.totalActions.toLocaleString()}</div>
+                        <p className="text-xs text-muted-foreground mt-1">ウェブサイト・ルート・通話</p>
                     </CardContent>
                 </Card>
                 <Card>
@@ -70,14 +165,8 @@ export default function AnalyticsPage() {
                         <MapPin className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">120</div>
-                        <p className="text-xs text-muted-foreground flex items-center mt-1">
-                            <span className="text-rose-500 flex items-center mr-1">
-                                <ArrowDownRight className="h-3 w-3 mr-0.5" />
-                                -2.4%
-                            </span>
-                            先月比
-                        </p>
+                        <div className="text-2xl font-bold">{data.totalDirections.toLocaleString()}</div>
+                        <p className="text-xs text-muted-foreground mt-1">お店への行き方を検索</p>
                     </CardContent>
                 </Card>
             </div>
@@ -94,7 +183,7 @@ export default function AnalyticsPage() {
                     <CardContent>
                         <div className="h-[300px] w-full">
                             <ResponsiveContainer width="100%" height="100%">
-                                <LineChart data={viewsData}>
+                                <LineChart data={data.viewsData}>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} />
                                     <XAxis dataKey="date" fontSize={12} tickLine={false} axisLine={false} />
                                     <YAxis fontSize={12} tickLine={false} axisLine={false} />
@@ -120,7 +209,7 @@ export default function AnalyticsPage() {
                     <CardContent>
                         <div className="h-[250px] w-full">
                             <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={actionsData} layout="vertical" margin={{ left: 20 }}>
+                                <BarChart data={data.actionsData} layout="vertical" margin={{ left: 20 }}>
                                     <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
                                     <XAxis type="number" fontSize={12} tickLine={false} axisLine={false} />
                                     <YAxis dataKey="name" type="category" fontSize={12} tickLine={false} axisLine={false} width={100} />

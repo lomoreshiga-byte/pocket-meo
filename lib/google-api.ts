@@ -37,7 +37,21 @@ export async function fetchGBPLocations(accessToken: string, accountId: string) 
 export async function fetchLocationInsights(accessToken: string, locationId: string, startDate: string, endDate: string) {
     // Daily Metricsの取得
     const url = `${GBP_PERFORMANCE_BASE}/${locationId}:fetchDailyMetrics`
-    const res = await fetch(`${url}?dailyMetric=BUSINESS_IMPRESSIONS_DESKTOP_MAPS&dailyMetric=BUSINESS_IMPRESSIONS_DESKTOP_SEARCH&dailyMetric=BUSINESS_IMPRESSIONS_MOBILE_MAPS&dailyMetric=BUSINESS_IMPRESSIONS_MOBILE_SEARCH&dailyRange.startDate.year=${startDate.split('-')[0]}&dailyRange.startDate.month=${startDate.split('-')[1]}&dailyRange.startDate.day=${startDate.split('-')[2]}&dailyRange.endDate.year=${endDate.split('-')[0]}&dailyRange.endDate.month=${endDate.split('-')[1]}&dailyRange.endDate.day=${endDate.split('-')[2]}`, {
+    const metrics = [
+        'BUSINESS_IMPRESSIONS_DESKTOP_MAPS',
+        'BUSINESS_IMPRESSIONS_DESKTOP_SEARCH',
+        'BUSINESS_IMPRESSIONS_MOBILE_MAPS',
+        'BUSINESS_IMPRESSIONS_MOBILE_SEARCH',
+        'WEBSITE_CLICKS',
+        'CALL_CLICKS',
+        'BUSINESS_DIRECTION_REQUESTS'
+    ]
+    const queryString = metrics.map(m => `dailyMetric=${m}`).join('&')
+
+    // 日付範囲
+    const dateQuery = `dailyRange.startDate.year=${startDate.split('-')[0]}&dailyRange.startDate.month=${startDate.split('-')[1]}&dailyRange.startDate.day=${startDate.split('-')[2]}&dailyRange.endDate.year=${endDate.split('-')[0]}&dailyRange.endDate.month=${endDate.split('-')[1]}&dailyRange.endDate.day=${endDate.split('-')[2]}`
+
+    const res = await fetch(`${url}?${queryString}&${dateQuery}`, {
         headers: {
             Authorization: `Bearer ${accessToken}`,
         },
