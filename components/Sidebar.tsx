@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Home, Star, PenSquare, Settings, LogOut, User } from 'lucide-react'
+import { Home, Star, PenSquare, Settings, LogOut, User, BarChart3 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -14,6 +14,11 @@ const navItems = [
         label: 'ダッシュボード',
         href: '/dashboard',
         icon: Home,
+    },
+    {
+        label: 'パフォーマンス分析',
+        href: '/analytics',
+        icon: BarChart3,
     },
     {
         label: 'クチコミ管理',
