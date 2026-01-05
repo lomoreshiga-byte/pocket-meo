@@ -6,6 +6,7 @@ const mPlusRounded1c = M_PLUS_Rounded_1c({
     weight: ['100', '300', '400', '500', '700', '800', '900'],
     subsets: ['latin'],
     display: 'swap',
+    adjustFontFallback: false,
 })
 
 export const metadata: Metadata = {
