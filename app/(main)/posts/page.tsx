@@ -146,7 +146,7 @@ export default function PostsPage() {
                         <div>
                             <h1 className="text-2xl font-bold">投稿</h1>
                             <p className="text-primary-foreground/80 text-sm mt-1">
-                                GBPとInstagramの投稿管理
+                                GBPとInstagramの投稿管理 (v1.1)
                             </p>
                         </div>
                         <Button
