@@ -90,7 +90,7 @@ export function ReviewCard({ review, onReplySubmit }: ReviewCardProps) {
                         </div>
                         <p className="text-sm border-l-2 border-primary/20 pl-2">{review.replyText}</p>
                         {review.repliedAt && (
-                            <p className="text-xs text-muted-foreground mt-2 text-right">
+                            <p className="text-xs text-muted-foreground mt-1 text-right">
                                 {formatDate(review.repliedAt)}
                             </p>
                         )}
