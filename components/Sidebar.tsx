@@ -31,6 +31,11 @@ const navItems = [
         icon: PenSquare,
     },
     {
+        label: 'デバッグ',
+        href: '/debug',
+        icon: AlertCircle, // Temporary
+    },
+    {
         label: '設定',
         href: '/settings',
         icon: Settings,
