@@ -67,13 +67,30 @@ export function ReviewCard({ review, onReplySubmit }: ReviewCardProps) {
 
                 {/* 返信エリア */}
                 {review.replied && review.replyText ? (
-                    <div className="bg-muted/50 rounded-lg p-3 ml-13">
-                        <p className="text-xs font-semibold text-muted-foreground mb-1">
-                            あなたの返信
-                        </p>
-                        <p className="text-sm">{review.replyText}</p>
+                    <div className="bg-muted/50 rounded-lg p-3 ml-13 relative group">
+                        <div className="flex justify-between items-start">
+                            <p className="text-xs font-semibold text-muted-foreground mb-1">
+                                あなたの返信
+                            </p>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={() => setShowAIGenerator(true)}
+                            >
+                                <svg
+                                    className="w-3.5 h-3.5 text-muted-foreground hover:text-foreground"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                </svg>
+                            </Button>
+                        </div>
+                        <p className="text-sm border-l-2 border-primary/20 pl-2">{review.replyText}</p>
                         {review.repliedAt && (
-                            <p className="text-xs text-muted-foreground mt-1">
+                            <p className="text-xs text-muted-foreground mt-2 text-right">
                                 {formatDate(review.repliedAt)}
                             </p>
                         )}
