@@ -176,7 +176,7 @@ export default function IntegrationsPage() {
                         <ul className="text-xs text-muted-foreground list-disc pl-4 space-y-1">
                             <li>Instagramがプロアカウント（ビジネス/クリエイター）になっているか確認してください</li>
                             <li>InstagramとFacebookページが正しくリンクされているか確認してください</li>
-                            <li>「設定 > ビジネス向けFacebookログイン」を選択して許可してください</li>
+                            <li>「設定 &gt; ビジネス向けFacebookログイン」を選択して許可してください</li>
                         </ul>
                         <a
                             href="https://www.facebook.com/business/help/connect-instagram-to-page"
