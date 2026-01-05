@@ -54,15 +54,8 @@ export default function PostsPage() {
             // Facebookログイン直後でないと取得できない場合があるため、
             // 空の場合はモック（空配列）になる
             const token = session?.provider_token
-            console.log('Session:', session) // Debug
 
             if (token) {
-                console.log('Token prefix:', token.substring(0, 5))
-                // トークンがFacebook形式(EA...)か確認
-                if (!token.startsWith('EA') && !token.startsWith('IG')) {
-                    console.warn('Suspicious token format (not starting with EA/IG). Might be Supabase token mistaken for Provider token.')
-                    // エラーにはせずそのままなげてみるが、ログに残す
-                }
                 const media = await fetchInstagramMedia(token)
                 const formattedPosts = media.map(m => convertIgMediaToPost(m))
                 setIgPosts(formattedPosts)
