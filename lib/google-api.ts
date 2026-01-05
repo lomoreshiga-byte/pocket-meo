@@ -120,3 +120,32 @@ export async function createGBPPost(accessToken: string, locationId: string, con
 
     return res.json()
 }
+
+/**
+ * 店舗のクチコミを取得 (v4 API)
+ * @param accessToken OAuthアクセストークン
+ * @param accountId アカウントID (accounts/xxxxxxxx)
+ * @param locationId 店舗ID (locations/xxxxxxxx)
+ */
+export async function fetchGBPReviews(accessToken: string, accountId: string, locationId: string) {
+    // locationIdが "locations/" で始まっていない場合は付与
+    const formattedLocationId = locationId.startsWith('locations/') ? locationId.split('/')[1] : locationId
+
+    // v4 APIのエンドポイント構築: accounts/{accountId}/locations/{locationId}/reviews
+    // accountIdは既に "accounts/" を含んでいることを想定
+    const url = `https://mybusiness.googleapis.com/v4/${accountId}/locations/${formattedLocationId}/reviews`
+
+    const res = await fetch(url, {
+        headers: {
+            Authorization: `Bearer ${accessToken}`,
+        },
+    })
+
+    if (!res.ok) {
+        const errorText = await res.text()
+        console.error('GBP Reviews Error:', errorText)
+        throw new Error(`Failed to fetch GBP reviews: ${res.status} ${errorText}`)
+    }
+
+    return res.json()
+}
