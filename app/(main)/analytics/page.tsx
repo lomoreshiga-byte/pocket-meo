@@ -13,6 +13,7 @@ interface InsightsData {
     totalViews: number
     totalActions: number
     totalDirections: number
+    topKeywords?: { term: string, value: number }[]
 }
 
 const mockViewsData = [
@@ -44,7 +45,8 @@ const mockData: InsightsData = {
     actionsData: mockActionsData,
     totalViews: 3610,
     totalActions: 193,
-    totalDirections: 120
+    totalDirections: 120,
+    topKeywords: mockTopKeywords
 }
 
 export default function AnalyticsPage() {
