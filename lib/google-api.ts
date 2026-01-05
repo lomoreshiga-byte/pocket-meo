@@ -73,3 +73,50 @@ export async function fetchLocationInsights(accessToken: string, locationId: str
 
     return res.json()
 }
+
+const GBP_POSTS_BASE = 'https://mybusinesslocalposts.googleapis.com/v1'
+
+/**
+ * Googleビジネスプロフィールに投稿を作成
+ * @param accessToken OAuthアクセストークン
+ * @param locationId 店舗ID (locations/xxxxxxxx)
+ * @param content 投稿本文
+ * @param imageUrl 画像URL (任意)
+ */
+export async function createGBPPost(accessToken: string, locationId: string, content: string, imageUrl?: string) {
+    // locationIdが "locations/" で始まっていない場合は付与
+    const formattedLocationId = locationId.startsWith('locations/') ? locationId : `locations/${locationId}`
+    const url = `${GBP_POSTS_BASE}/${formattedLocationId}/localPosts`
+
+    const body: any = {
+        summary: content,
+        topicType: 'STANDARD', // 標準の投稿
+        // languageCode: 'ja', // 必要に応じて
+    }
+
+    if (imageUrl) {
+        body.media = [
+            {
+                mediaFormat: 'PHOTO',
+                sourceUrl: imageUrl,
+            }
+        ]
+    }
+
+    const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+    })
+
+    if (!res.ok) {
+        const errorText = await res.text()
+        console.error('GBP Create Post Error:', errorText)
+        throw new Error(`Failed to create GBP post: ${res.status} ${errorText}`)
+    }
+
+    return res.json()
+}

@@ -1,18 +1,17 @@
-'use client'
-
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Plus, Image as ImageIcon, Calendar, CheckCircle2, RefreshCw, AlertCircle } from 'lucide-react'
+import { Plus, Image as ImageIcon, Calendar, CheckCircle2, RefreshCw, AlertCircle, Share2, MapPin } from 'lucide-react'
 import { Post } from '@/types'
 import { formatDate } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
 import { fetchInstagramMedia, InstagramMedia } from '@/lib/instagram-api'
+import { createGBPPost, fetchGBPAccounts, fetchGBPLocations } from '@/lib/google-api'
+import { toast } from 'sonner' // Assuming sonner or use a simple alert for now if toast not installed, but let's use window.alert if not sure. Actually better to use local state for status.
 
-// GBP用のモックデータ (ローカル管理分)
 const mockGbpPosts: Post[] = [
     {
         id: '1',
@@ -21,7 +20,7 @@ const mockGbpPosts: Post[] = [
         imageUrl: undefined,
         platform: 'gbp',
         status: 'scheduled',
-        scheduledAt: new Date(Date.now() + 2 * 60 * 60 * 1000), // 2時間後
+        scheduledAt: new Date(Date.now() + 2 * 60 * 60 * 1000),
         createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000),
     },
     {
@@ -39,6 +38,7 @@ export default function PostsPage() {
     const [igPosts, setIgPosts] = useState<Post[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    const [syncingId, setSyncingId] = useState<string | null>(null)
 
     useEffect(() => {
         loadInstagramPosts()
@@ -49,10 +49,6 @@ export default function PostsPage() {
         setError(null)
         try {
             const { data: { session } } = await supabase.auth.getSession()
-            // Note: 本来はDBからアクセストークンを取得するか、プロバイダートークンを使用する
-            // ここでは一時的にsessionのprovider_tokenを使用するが、
-            // Facebookログイン直後でないと取得できない場合があるため、
-            // 空の場合はモック（空配列）になる
             const token = session?.provider_token
 
             if (token) {
@@ -60,14 +56,10 @@ export default function PostsPage() {
                 const formattedPosts = media.map(m => convertIgMediaToPost(m))
                 setIgPosts(formattedPosts)
             } else {
-                // トークンがない場合
                 console.log('No Facebook provider token found in session')
-                // 連携済みかどうかを確認（identities）
                 const fbIdentity = session?.user?.identities?.find(i => i.provider === 'facebook')
                 if (fbIdentity) {
                     setError('アクセストークンが取得できませんでした。一度ログアウトして、再度ログインをお試しください。')
-                } else {
-                    // 未連携の場合は通知だけでOK（エラーにはしない）
                 }
             }
         } catch (err: any) {
@@ -83,6 +75,48 @@ export default function PostsPage() {
             setError(`${errorMsg} (Time: ${new Date().toLocaleTimeString()})`)
         } finally {
             setLoading(false)
+        }
+    }
+
+    const handleSyncToGBP = async (post: Post) => {
+        if (!confirm('この投稿をGoogleマップ（ビジネスプロフィール）にも投稿しますか？')) return
+
+        setSyncingId(post.id)
+        try {
+            const { data: { session } } = await supabase.auth.getSession()
+            const token = session?.provider_token
+
+            if (!token) throw new Error('認証トークンが見つかりません')
+
+            // Note: 現在のトークンがGoogleのものか確認できないため、とりあえずAPIを叩く
+            // Googleログインしていない場合はここでGoogle APIのエラーが出る
+
+            // 1. アカウント取得
+            const accounts = await fetchGBPAccounts(token)
+            const accountId = accounts.accounts?.[0]?.name
+            if (!accountId) throw new Error('Googleビジネスプロフィールアカウントが見つかりません')
+
+            // 2. 店舗取得 (最初の1店舗)
+            const locations = await fetchGBPLocations(token, accountId)
+            const locationId = locations.locations?.[0]?.name
+            if (!locationId) throw new Error('店舗情報が見つかりません')
+
+            // 3. 投稿作成
+            await createGBPPost(token, locationId, post.content, post.imageUrl)
+
+            alert('Googleマップへの投稿が完了しました！')
+
+        } catch (err: any) {
+            console.error('Sync Error:', err)
+            let msg = err.message
+            if (msg.includes('401') || msg.includes('403')) {
+                msg = 'Google認証に失敗しました。一度ログアウトし、Googleアカウントでログインし直してください。（現在Facebookログイン中のためGoogle APIが使えません）'
+            } else if (msg.includes('429')) {
+                msg = 'Google APIの使用制限(Quota)を超過しているため、現在は投稿できません。'
+            }
+            alert(`投稿に失敗しました:\n${msg}`)
+        } finally {
+            setSyncingId(null)
         }
     }
 
@@ -158,17 +192,37 @@ export default function PostsPage() {
                     </TabsList>
 
                     <TabsContent value="all" className="space-y-4 mt-4">
-                        {allPosts.map(post => <PostCard key={post.id} post={post} />)}
+                        {allPosts.map(post => (
+                            <PostCard
+                                key={post.id}
+                                post={post}
+                                onSync={() => handleSyncToGBP(post)}
+                                isSyncing={syncingId === post.id}
+                            />
+                        ))}
                         {allPosts.length === 0 && <EmptyState />}
                     </TabsContent>
 
                     <TabsContent value="gbp" className="space-y-4 mt-4">
-                        {localPosts.map(post => <PostCard key={post.id} post={post} />)}
+                        {localPosts.map(post => (
+                            <PostCard
+                                key={post.id}
+                                post={post}
+                            // GBP posts cannot be synced to GBP again
+                            />
+                        ))}
                         {localPosts.length === 0 && <EmptyState />}
                     </TabsContent>
 
                     <TabsContent value="instagram" className="space-y-4 mt-4">
-                        {igPosts.map(post => <PostCard key={post.id} post={post} />)}
+                        {igPosts.map(post => (
+                            <PostCard
+                                key={post.id}
+                                post={post}
+                                onSync={() => handleSyncToGBP(post)}
+                                isSyncing={syncingId === post.id}
+                            />
+                        ))}
                         {igPosts.length === 0 && <EmptyState />}
                     </TabsContent>
                 </Tabs>
@@ -195,13 +249,7 @@ function EmptyState() {
     )
 }
 
-function PostCard({ post }: { post: Post }) {
-    const platformLabels = {
-        gbp: 'Google',
-        instagram: 'Instagram',
-        both: 'Google + Insta',
-    }
-
+function PostCard({ post, onSync, isSyncing }: { post: Post, onSync?: () => void, isSyncing?: boolean }) {
     const statusConfig = {
         draft: { label: '下書き', variant: 'outline' as const, bg: 'bg-muted' },
         scheduled: { label: '予約中', variant: 'secondary' as const, bg: 'bg-orange-50' },
@@ -258,6 +306,31 @@ function PostCard({ post }: { post: Post }) {
                             <div className="flex items-center gap-1 text-xs text-orange-600 font-medium">
                                 <Calendar className="w-3 h-3" />
                                 予約: {formatDate(post.scheduledAt)}
+                            </div>
+                        )}
+
+                        {/* Googleマップ同期ボタン (Instagram投稿のみ) */}
+                        {post.platform === 'instagram' && onSync && (
+                            <div className="mt-2 text-right">
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-7 text-xs gap-1 border-blue-200 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+                                    onClick={onSync}
+                                    disabled={isSyncing}
+                                >
+                                    {isSyncing ? (
+                                        <>
+                                            <RefreshCw className="w-3 h-3 animate-spin" />
+                                            送信中...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <MapPin className="w-3 h-3" />
+                                            Googleマップに投稿
+                                        </>
+                                    )}
+                                </Button>
                             </div>
                         )}
                     </div>
