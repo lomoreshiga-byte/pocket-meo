@@ -146,8 +146,8 @@ export default function AnalyticsPage() {
 
         // キーワードデータの処理 (top 10)
         let topKeywords: { term: string, value: number }[] = []
-        if (json.searchKeywords && json.searchKeywords.searchKeywordImpressions) {
-            topKeywords = json.searchKeywords.searchKeywordImpressions
+        if (insights.searchKeywords && insights.searchKeywords.searchKeywordImpressions) {
+            topKeywords = insights.searchKeywords.searchKeywordImpressions
                 .map((item: any) => ({
                     term: item.searchKeyword,
                     value: parseInt(item.insightsValue?.value || '0')
