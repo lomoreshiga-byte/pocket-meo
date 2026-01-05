@@ -53,19 +53,19 @@ export default function DashboardPage() {
     const isTemporarilyClosed = false
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+        <div className="min-h-screen bg-gradient-to-b from-background to-muted/20 md:bg-none">
             {/* ヘッダー */}
-            <div className="bg-primary text-primary-foreground pt-safe">
-                <div className="p-6 pb-8">
+            <div className="bg-primary text-primary-foreground pt-safe md:bg-transparent md:text-foreground md:pt-0 md:mb-8">
+                <div className="p-6 pb-8 md:p-0">
                     <h1 className="text-2xl font-bold">ダッシュボード</h1>
-                    <p className="text-primary-foreground/80 mt-1">
+                    <p className="text-primary-foreground/80 mt-1 md:text-muted-foreground">
                         今日も1日お疲れ様です 👋
                     </p>
                 </div>
             </div>
 
             {/* アクションカード */}
-            <div className="px-4 -mt-4 space-y-3 pb-6">
+            <div className="px-4 -mt-4 space-y-3 pb-6 md:bg-transparent md:mt-0 md:p-0 md:grid md:grid-cols-3 md:gap-6 md:space-y-0">
                 {/* 未返信クチコミ */}
                 <ActionCard
                     title="未返信のクチコミ"
@@ -97,27 +97,27 @@ export default function DashboardPage() {
             </div>
 
             {/* クイックアクション */}
-            <div className="px-4 py-6 border-t">
+            <div className="px-4 py-6 border-t md:border-0 md:p-0 md:mt-8">
                 <h2 className="text-lg font-semibold mb-4">クイックアクション</h2>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-6">
                     <Link href="/posts/new">
-                        <Card className="transition-all hover:shadow-md active:scale-[0.98]">
-                            <CardContent className="p-4 text-center">
-                                <div className="w-12 h-12 mx-auto bg-primary/10 rounded-full flex items-center justify-center mb-2">
-                                    <PenSquare className="w-6 h-6 text-primary" />
+                        <Card className="transition-all hover:shadow-md active:scale-[0.98] hover:border-primary/50">
+                            <CardContent className="p-4 text-center md:py-8">
+                                <div className="w-12 h-12 md:w-16 md:h-16 mx-auto bg-primary/10 rounded-full flex items-center justify-center mb-2 md:mb-4">
+                                    <PenSquare className="w-6 h-6 md:w-8 md:h-8 text-primary" />
                                 </div>
-                                <p className="font-medium">新規投稿</p>
+                                <p className="font-medium md:text-lg">新規投稿</p>
                             </CardContent>
                         </Card>
                     </Link>
 
                     <Link href="/settings">
-                        <Card className="transition-all hover:shadow-md active:scale-[0.98]">
-                            <CardContent className="p-4 text-center">
-                                <div className="w-12 h-12 mx-auto bg-primary/10 rounded-full flex items-center justify-center mb-2">
-                                    <Clock className="w-6 h-6 text-primary" />
+                        <Card className="transition-all hover:shadow-md active:scale-[0.98] hover:border-primary/50">
+                            <CardContent className="p-4 text-center md:py-8">
+                                <div className="w-12 h-12 md:w-16 md:h-16 mx-auto bg-primary/10 rounded-full flex items-center justify-center mb-2 md:mb-4">
+                                    <Clock className="w-6 h-6 md:w-8 md:h-8 text-primary" />
                                 </div>
-                                <p className="font-medium">営業時間</p>
+                                <p className="font-medium md:text-lg">営業時間</p>
                             </CardContent>
                         </Card>
                     </Link>
