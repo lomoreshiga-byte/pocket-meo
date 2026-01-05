@@ -43,7 +43,8 @@ export default function AnalyticsPage() {
                 })
 
                 if (!res.ok) {
-                    throw new Error('データの取得に失敗しました')
+                    const errorData = await res.json().catch(() => null)
+                    throw new Error(errorData?.error || 'データの取得に失敗しました')
                 }
 
                 const json = await res.json()
