@@ -1,20 +1,23 @@
-'use client'
-
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { ReviewCard } from '@/components/ReviewCard'
 import { Review } from '@/types'
-import { Filter, RefreshCw, AlertCircle } from 'lucide-react'
+import { RefreshCw, AlertCircle, Filter } from 'lucide-react'
 import { fetchGBPAccounts, fetchGBPLocations, fetchGBPReviews } from '@/lib/google-api'
-
-// モックデータを削除
-
-type FilterType = 'all' | 'unreplied' | 'high' | 'low'
+import { ReviewFilter, FilterConditions } from '@/components/ReviewFilter'
+import { subWeeks, subMonths, subYears, isWithinInterval, startOfDay, endOfDay, parseISO } from 'date-fns'
 
 export default function ReviewsPage() {
     const [reviews, setReviews] = useState<Review[]>([])
-    const [filter, setFilter] = useState<FilterType>('all')
+    // 初期フィルター: すべて表示 (未返信・返信済み、全評価、全期間)
+    const [filterConditions, setFilterConditions] = useState<FilterConditions>({
+        replyStatus: ['unreplied', 'replied'],
+        ratings: [5, 4, 3, 2, 1],
+        dateRange: 'all',
+        customStartDate: '',
+        customEndDate: ''
+    })
     const [loading, setLoading] = useState(true)
     const [syncing, setSyncing] = useState(false)
     const [error, setError] = useState<string | null>(null)
@@ -137,10 +140,50 @@ export default function ReviewsPage() {
     }
 
     const filteredReviews = reviews.filter(review => {
-        if (filter === 'unreplied') return !review.replied
-        if (filter === 'high') return review.rating >= 4
-        if (filter === 'low') return review.rating <= 3
-        return true
+        // 1. 返信状況フィルター
+        const status = review.replied ? 'replied' : 'unreplied'
+        if (!filterConditions.replyStatus.includes(status)) return false
+
+        // 2. 評価フィルター
+        if (!filterConditions.ratings.includes(review.rating)) return false
+
+        // 3. 期間フィルター
+        const date = review.createdAt
+        const now = new Date()
+
+        if (filterConditions.dateRange === 'all') return true
+
+        if (filterConditions.dateRange === 'custom') {
+            if (filterConditions.customStartDate && filterConditions.customEndDate) {
+                const start = startOfDay(parseISO(filterConditions.customStartDate))
+                const end = endOfDay(parseISO(filterConditions.customEndDate))
+                return isWithinInterval(date, { start, end })
+            }
+            return true
+        }
+
+        let thresholdDate
+        switch (filterConditions.dateRange) {
+            case '1week':
+                thresholdDate = subWeeks(now, 1)
+                break
+            case '1month':
+                thresholdDate = subMonths(now, 1)
+                break
+            case '3months':
+                thresholdDate = subMonths(now, 3)
+                break
+            case '6months':
+                thresholdDate = subMonths(now, 6)
+                break
+            case '1year':
+                thresholdDate = subYears(now, 1)
+                break
+            default:
+                return true
+        }
+
+        return date >= thresholdDate
     })
 
     const unrepliedCount = reviews.filter(r => !r.replied).length
@@ -156,106 +199,67 @@ export default function ReviewsPage() {
     return (
         <div className="min-h-screen bg-background">
             {/* ヘッダー */}
-            <div className="bg-primary text-primary-foreground pt-safe sticky top-0 z-10">
-                <div className="p-4">
-                    <div className="flex items-center justify-between mb-3">
+            <div className="bg-primary text-primary-foreground pt-safe sticky top-0 z-10 transition-all">
+                <div className="px-4 py-3">
+                    <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                            <h1 className="text-2xl font-bold">クチコミ</h1>
+                            <h1 className="text-xl font-bold">クチコミ管理</h1>
                             <Button
                                 variant="secondary"
                                 size="sm"
-                                className="h-8 w-8 p-0 rounded-full"
+                                className="h-7 w-7 p-0 rounded-full bg-white/20 hover:bg-white/30 text-white border-0"
                                 onClick={loadFromGoogle}
                                 disabled={syncing}
                             >
-                                <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
+                                <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin' : ''}`} />
                             </Button>
                         </div>
                         {unrepliedCount > 0 && (
-                            <span className="bg-primary-foreground text-primary px-3 py-1 rounded-full text-sm font-semibold">
-                                未返信 {unrepliedCount}件
+                            <span className="bg-white/20 text-white px-2 py-0.5 rounded text-xs font-medium">
+                                未返信 {unrepliedCount}
                             </span>
                         )}
-                    </div>
-
-                    {error && (
-                        <div className="mb-2 bg-destructive/20 text-white text-xs p-2 rounded flex items-center gap-1">
-                            <AlertCircle className="w-3 h-3" />
-                            {error}
-                        </div>
-                    )}
-
-                    {/* フィルター */}
-                    <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4">
-                        <FilterButton
-                            active={filter === 'all'}
-                            onClick={() => setFilter('all')}
-                        >
-                            すべて
-                        </FilterButton>
-                        <FilterButton
-                            active={filter === 'unreplied'}
-                            onClick={() => setFilter('unreplied')}
-                        >
-                            未返信のみ
-                        </FilterButton>
-                        <FilterButton
-                            active={filter === 'high'}
-                            onClick={() => setFilter('high')}
-                        >
-                            高評価
-                        </FilterButton>
-                        <FilterButton
-                            active={filter === 'low'}
-                            onClick={() => setFilter('low')}
-                        >
-                            低評価
-                        </FilterButton>
                     </div>
                 </div>
             </div>
 
-            {/* クチコミリスト */}
-            <div className="p-4 space-y-3 pb-24">
-                {filteredReviews.length === 0 ? (
-                    <div className="text-center py-12">
-                        <Filter className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
-                        <p className="text-muted-foreground">
-                            該当するクチコミがありません
-                        </p>
+            <div className="p-4 pb-24">
+                {error && (
+                    <div className="mb-4 bg-destructive/10 text-destructive text-sm p-3 rounded-md flex items-center gap-2 border border-destructive/20">
+                        <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                        {error}
                     </div>
-                ) : (
-                    filteredReviews.map(review => (
-                        <ReviewCard
-                            key={review.id}
-                            review={review}
-                            onReplySubmit={handleReplySubmit}
-                        />
-                    ))
                 )}
+
+                {/* 新しいフィルターコンポーネント */}
+                <ReviewFilter
+                    onFilterChange={setFilterConditions}
+                    initialConditions={filterConditions}
+                />
+
+                {/* クチコミリスト */}
+                <div className="space-y-4">
+                    {filteredReviews.length === 0 ? (
+                        <div className="text-center py-16 bg-muted/20 rounded-xl border border-dashed">
+                            <Filter className="w-10 h-10 mx-auto text-muted-foreground/50 mb-3" />
+                            <p className="text-muted-foreground font-medium">
+                                条件に一致するクチコミがありません
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                                フィルター条件を変更してみてください
+                            </p>
+                        </div>
+                    ) : (
+                        filteredReviews.map(review => (
+                            <ReviewCard
+                                key={review.id}
+                                review={review}
+                                onReplySubmit={handleReplySubmit}
+                            />
+                        ))
+                    )}
+                </div>
             </div>
         </div>
-    )
-}
-
-function FilterButton({
-    active,
-    onClick,
-    children,
-}: {
-    active: boolean
-    onClick: () => void
-    children: React.ReactNode
-}) {
-    return (
-        <Button
-            variant={active ? 'secondary' : 'ghost'}
-            size="sm"
-            onClick={onClick}
-            className={`whitespace-nowrap ${active ? 'bg-primary-foreground text-primary' : 'text-primary-foreground/80'
-                }`}
-        >
-            {children}
-        </Button>
     )
 }
