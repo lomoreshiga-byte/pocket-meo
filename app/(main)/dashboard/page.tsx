@@ -15,8 +15,8 @@ function ActionCard({ title, badge, href, variant = 'default' }: ActionCardProps
         <Link href={href} className="h-full block">
             <Card className={`h-full transition-all hover:shadow-md active:scale-[0.98] ${variant === 'warning' ? 'border-destructive/50 bg-destructive/5' : ''
                 }`}>
-                <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between h-full">
+                <CardHeader className="h-full justify-center">
+                    <div className="flex items-center justify-between w-full">
                         <div className="flex items-center gap-3">
                             <div>
                                 <CardTitle className="text-lg">{title}</CardTitle>
