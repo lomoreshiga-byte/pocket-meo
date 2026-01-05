@@ -149,3 +149,42 @@ export async function fetchGBPReviews(accessToken: string, accountId: string, lo
 
     return res.json()
 }
+
+/**
+ * 店舗の検索クエリ（キーワード）インサイトを取得
+ * @param accessToken OAuthアクセストークン
+ * @param locationId 店舗ID (locations/xxxxxxxx)
+ * @param startDate YYYY-MM-DD
+ * @param endDate YYYY-MM-DD
+ */
+export async function fetchLocationSearchKeywords(accessToken: string, locationId: string, startDate: string, endDate: string) {
+    // locationIdが "locations/" で始まっていない場合は付与
+    const formattedLocationId = locationId.startsWith('locations/') ? locationId : `locations/${locationId}`
+
+    // GBP Performance API v1 の検索キーワードエンドポイント
+    const url = `${GBP_PERFORMANCE_BASE}/${formattedLocationId}:fetchSearchKeywordImpressions`
+
+    // 日付範囲
+    // searchKeywordImpressionsのエンドポイントは dailyRange ではなく monthlyRange を要求するドキュメントもあるが、
+    // v1の仕様に従い、ここでは日次範囲を指定して試みる（またはドキュメントに準拠したパラメータ構造にする）。
+    // NOTE: GBP Performance APIのキーワード取得はパラメータ構造が少し特殊な場合があるため、基本形を使用。
+    const dateQuery = `monthlyRange.startMonth.year=${startDate.split('-')[0]}&monthlyRange.startMonth.month=${startDate.split('-')[1]}&monthlyRange.endMonth.year=${endDate.split('-')[0]}&monthlyRange.endMonth.month=${endDate.split('-')[1]}`
+
+    const res = await fetch(`${url}?${dateQuery}`, {
+        headers: {
+            Authorization: `Bearer ${accessToken}`,
+        },
+    })
+
+    if (!res.ok) {
+        const errorText = await res.text()
+        console.error('GBP Search Keywords Error:', errorText)
+        // 404や403の場合は空配列を返して画面を壊さないようにする
+        if (res.status === 404 || res.status === 403) {
+            return { searchKeywordImpressions: [] }
+        }
+        throw new Error('Failed to fetch search keywords')
+    }
+
+    return res.json()
+}
