@@ -15,18 +15,46 @@ interface InsightsData {
     totalDirections: number
 }
 
+const mockViewsData = [
+    { date: '12/1', map: 450, search: 120 },
+    { date: '12/5', map: 480, search: 132 },
+    { date: '12/10', map: 510, search: 101 },
+    { date: '12/15', map: 520, search: 134 },
+    { date: '12/20', map: 460, search: 90 },
+    { date: '12/25', map: 610, search: 230 },
+    { date: '12/30', map: 580, search: 210 },
+]
+
+const mockActionsData = [
+    { name: 'ウェブサイト', value: 45 },
+    { name: 'ルート検索', value: 120 },
+    { name: '通話', value: 28 },
+]
+
+const mockData: InsightsData = {
+    viewsData: mockViewsData,
+    actionsData: mockActionsData,
+    totalViews: 3610,
+    totalActions: 193,
+    totalDirections: 120
+}
+
 export default function AnalyticsPage() {
     const [loading, setLoading] = useState(true)
     const [data, setData] = useState<InsightsData | null>(null)
     const [error, setError] = useState<string | null>(null)
+    const [isMock, setIsMock] = useState(false)
 
     useEffect(() => {
         const fetchInsights = async () => {
             try {
                 // セッション取得
                 const { data: { session } } = await supabase.auth.getSession()
+
+                // トークンがない、またはAPIエラー時はモックデータを使用
                 if (!session?.provider_token) {
-                    throw new Error('認証トークンが見つかりません。再ログインしてください。')
+                    console.warn('Token not found, using mock data')
+                    throw new Error('Token not found')
                 }
 
                 // 日付範囲 (過去30日)
@@ -44,15 +72,17 @@ export default function AnalyticsPage() {
 
                 if (!res.ok) {
                     const errorData = await res.json().catch(() => null)
-                    throw new Error(errorData?.error || 'データの取得に失敗しました')
+                    console.warn('API fetch failed, using mock data:', errorData)
+                    throw new Error(errorData?.error || 'Failed to fetch')
                 }
 
                 const json = await res.json()
                 processInsights(json.insights)
 
             } catch (err: any) {
-                console.error(err)
-                setError(err.message)
+                console.log('Using mock data due to error:', err)
+                setData(mockData)
+                setIsMock(true)
             } finally {
                 setLoading(false)
             }
@@ -121,21 +151,21 @@ export default function AnalyticsPage() {
         )
     }
 
-    if (error) {
-        return (
-            <div className="flex items-center justify-center h-96 text-red-500">
-                <p>{error}</p>
-            </div>
-        )
-    }
-
+    // Error state is handled by mock fallback, so we don't need explicit error return unless data remains null
     if (!data) return null
 
     return (
         <div className="space-y-6">
-            <div>
-                <h1 className="text-2xl font-bold">パフォーマンス分析</h1>
-                <p className="text-muted-foreground">過去30日間のインサイト情報 (Googleビジネスプロフィール)</p>
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                    <h1 className="text-2xl font-bold">パフォーマンス分析</h1>
+                    <p className="text-muted-foreground">過去30日間のインサイト情報</p>
+                </div>
+                {isMock && (
+                    <div className="bg-amber-100 text-amber-800 text-xs px-3 py-1 rounded-full font-medium border border-amber-200">
+                        ※ Google承認待ちのためデモデータを表示中
+                    </div>
+                )}
             </div>
 
             {/* 重要指標サマリー */}
