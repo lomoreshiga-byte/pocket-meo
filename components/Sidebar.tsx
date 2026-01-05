@@ -13,7 +13,8 @@ import {
     LogOut,
     User,
     BarChart3,
-    AlertCircle
+    AlertCircle,
+    ClipboardList
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -40,6 +41,11 @@ const navItems = [
         label: '投稿管理',
         href: '/posts',
         icon: PenSquare,
+    },
+    {
+        label: 'アンケート',
+        href: '/surveys',
+        icon: ClipboardList,
     },
     {
         label: '設定',
