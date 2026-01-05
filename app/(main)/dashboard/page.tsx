@@ -5,13 +5,12 @@ import { MessageSquare, Calendar, AlertCircle, ChevronRight } from 'lucide-react
 
 interface ActionCardProps {
     title: string
-    description: string
     badge?: number
     href: string
     variant?: 'default' | 'warning'
 }
 
-function ActionCard({ title, description, badge, href, variant = 'default' }: ActionCardProps) {
+function ActionCard({ title, badge, href, variant = 'default' }: ActionCardProps) {
     return (
         <Link href={href} className="h-full block">
             <Card className={`h-full transition-all hover:shadow-md active:scale-[0.98] ${variant === 'warning' ? 'border-destructive/50 bg-destructive/5' : ''
@@ -21,9 +20,6 @@ function ActionCard({ title, description, badge, href, variant = 'default' }: Ac
                         <div className="flex items-center gap-3">
                             <div>
                                 <CardTitle className="text-lg">{title}</CardTitle>
-                                <CardDescription className="text-sm mt-1">
-                                    {description}
-                                </CardDescription>
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -61,7 +57,6 @@ export default function DashboardPage() {
                 {/* 未返信クチコミ */}
                 <ActionCard
                     title="未返信のクチコミ"
-                    description="早めの返信でお客様との信頼を築きましょう"
                     badge={unrepliedReviews}
                     href="/reviews"
                 />
@@ -69,7 +64,6 @@ export default function DashboardPage() {
                 {/* 本日の投稿予定 */}
                 <ActionCard
                     title="本日の投稿予定"
-                    description="スケジュール済みの投稿を確認"
                     badge={todayPosts}
                     href="/posts"
                 />
@@ -78,33 +72,10 @@ export default function DashboardPage() {
                 {isTemporarilyClosed && (
                     <ActionCard
                         title="臨時休業中"
-                        description="営業再開時は設定を更新してください"
                         href="/settings"
                         variant="warning"
                     />
                 )}
-            </div>
-
-            {/* クイックアクション */}
-            <div className="px-4 py-6 border-t md:border-0 md:p-0 md:mt-8">
-                <h2 className="text-lg font-semibold mb-4">クイックアクション</h2>
-                <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-6">
-                    <Link href="/posts/new">
-                        <Card className="transition-all hover:shadow-md active:scale-[0.98] hover:border-primary/50">
-                            <CardContent className="p-4 text-center md:py-8">
-                                <p className="font-medium md:text-lg">新規投稿</p>
-                            </CardContent>
-                        </Card>
-                    </Link>
-
-                    <Link href="/settings">
-                        <Card className="transition-all hover:shadow-md active:scale-[0.98] hover:border-primary/50">
-                            <CardContent className="p-4 text-center md:py-8">
-                                <p className="font-medium md:text-lg">営業時間</p>
-                            </CardContent>
-                        </Card>
-                    </Link>
-                </div>
             </div>
         </div>
     )
