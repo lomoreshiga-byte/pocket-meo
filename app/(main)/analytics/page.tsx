@@ -31,6 +31,14 @@ const mockActionsData = [
     { name: '通話', value: 28 },
 ]
 
+const mockTopKeywords = [
+    { term: '近くのカフェ', value: 450 },
+    { term: 'ランチ おすすめ', value: 320 },
+    { term: 'Wi-Fi カフェ', value: 210 },
+    { term: 'コーヒー', value: 180 },
+    { term: '静かなカフェ', value: 150 },
+]
+
 const mockData: InsightsData = {
     viewsData: mockViewsData,
     actionsData: mockActionsData,
@@ -77,7 +85,7 @@ export default function AnalyticsPage() {
                 }
 
                 const json = await res.json()
-                processInsights(json.insights)
+                processInsights(json)
 
             } catch (err: any) {
                 console.log('Using mock data due to error:', err)
@@ -134,12 +142,25 @@ export default function AnalyticsPage() {
             { name: '通話', value: callClicks },
         ]
 
+        // キーワードデータの処理 (top 10)
+        let topKeywords: { term: string, value: number }[] = []
+        if (json.searchKeywords && json.searchKeywords.searchKeywordImpressions) {
+            topKeywords = json.searchKeywords.searchKeywordImpressions
+                .map((item: any) => ({
+                    term: item.searchKeyword,
+                    value: parseInt(item.insightsValue?.value || '0')
+                }))
+                .sort((a: any, b: any) => b.value - a.value)
+                .slice(0, 10)
+        }
+
         setData({
             viewsData: views,
             actionsData: actions,
             totalViews,
             totalActions,
-            totalDirections
+            totalDirections,
+            topKeywords
         })
     }
 
@@ -254,7 +275,45 @@ export default function AnalyticsPage() {
                         </div>
                     </CardContent>
                 </Card>
-            </div>
+            </Card>
         </div>
+
+            {/* 検索クエリランキング */ }
+    <Card>
+        <CardHeader>
+            <CardTitle>検索クエリランキング (上位キーワード)</CardTitle>
+            <CardDescription>
+                どんなキーワードでお店が検索されているか
+            </CardDescription>
+        </CardHeader>
+        <CardContent>
+            {!data.topKeywords || data.topKeywords.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground text-sm">
+                    <p>キーワードデータがありません</p>
+                </div>
+            ) : (
+                <div className="overflow-x-auto">
+                    <table className="w-full text-sm text-left">
+                        <thead className="text-muted-foreground border-b">
+                            <tr>
+                                <th className="py-2 px-4 font-medium">順位</th>
+                                <th className="py-2 px-4 font-medium">キーワード</th>
+                                <th className="py-2 px-4 font-medium text-right">表示回数</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {data.topKeywords.map((keyword, index) => (
+                                <tr key={index} className="border-b last:border-0 hover:bg-muted/50 transition-colors">
+                                    <td className="py-3 px-4 w-16 text-muted-foreground">{index + 1}</td>
+                                    <td className="py-3 px-4 font-medium">{keyword.term}</td>
+                                    <td className="py-3 px-4 text-right">{keyword.value.toLocaleString()}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+        </CardContent>
+    </Card>
     )
 }
