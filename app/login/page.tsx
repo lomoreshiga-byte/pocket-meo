@@ -42,9 +42,7 @@ export default function LoginPage() {
                     </div>
                     <CardTitle className="text-3xl font-bold">Pocket MEO</CardTitle>
                     <CardDescription className="text-base">
-                        スマホで3秒で返信、5秒で投稿
-                        <br />
-                        シンプルなMEO管理ツール
+                        スマホでできるMEO対策
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
