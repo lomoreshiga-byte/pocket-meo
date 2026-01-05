@@ -15,9 +15,9 @@ interface AIReplyGeneratorProps {
 
 export function AIReplyGenerator({ review, onClose, onSubmit }: AIReplyGeneratorProps) {
     const [selectedTone, setSelectedTone] = useState<ReplyTone>('grateful')
-    const [generatedReply, setGeneratedReply] = useState('')
+    const [generatedReply, setGeneratedReply] = useState(review.replyText || '')
     const [isGenerating, setIsGenerating] = useState(false)
-    const [isEditing, setIsEditing] = useState(false)
+    const [isEditing, setIsEditing] = useState(!!review.replyText)
 
     const tones = [
         { value: 'grateful' as ReplyTone, label: '感謝', emoji: '🙏' },
