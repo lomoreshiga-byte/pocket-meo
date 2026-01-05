@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { M_PLUS_Rounded_1c } from 'next/font/google'
+import { Toaster } from 'sonner'
 import './globals.css'
 
 const mPlusRounded1c = M_PLUS_Rounded_1c({
@@ -37,6 +38,7 @@ export default function RootLayout({
         <html lang="ja" className="scroll-smooth">
             <body className={mPlusRounded1c.className}>
                 {children}
+                <Toaster position="top-right" />
             </body>
         </html>
     )
