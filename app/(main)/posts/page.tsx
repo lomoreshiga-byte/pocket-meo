@@ -233,9 +233,9 @@ export default function PostsPage() {
             <Link href="/posts/new">
                 <Button
                     size="lg"
-                    className="fixed bottom-20 right-4 h-14 w-14 rounded-full shadow-lg z-40 bg-primary hover:bg-primary/90"
+                    className="fixed bottom-20 right-4 h-14 w-14 rounded-full shadow-lg z-40 bg-primary hover:bg-primary/90 text-white flex items-center justify-center p-0"
                 >
-                    <Plus className="w-6 h-6" />
+                    <Plus className="w-8 h-8" />
                 </Button>
             </Link>
         </div>
