@@ -46,9 +46,9 @@ export default function DashboardPage() {
     return (
         <div className="min-h-screen bg-gradient-to-b from-background to-muted/20 md:bg-none">
             {/* ヘッダー */}
-            <div className="bg-primary text-primary-foreground pt-safe md:bg-transparent md:text-foreground md:pt-0 md:mb-8">
-                <div className="p-6 pb-8 md:p-0">
-                    <h1 className="text-2xl font-bold">ダッシュボード</h1>
+            <div className="bg-primary text-primary-foreground pt-safe -mx-4 -mt-4 p-8 pb-10 mb-[-20px] rounded-b-[2rem] shadow-lg md:bg-transparent md:text-foreground md:shadow-none md:rounded-none md:m-0 md:pt-0 md:mb-8">
+                <div className="md:p-0">
+                    <h1 className="text-2xl font-bold text-center md:text-left">ダッシュボード</h1>
                 </div>
             </div>
 
