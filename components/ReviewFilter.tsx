@@ -20,7 +20,6 @@ interface ReviewFilterProps {
 }
 
 export function ReviewFilter({ onFilterChange, initialConditions }: ReviewFilterProps) {
-    const [isOpen, setIsOpen] = useState(false)
     const [conditions, setConditions] = useState<FilterConditions>(initialConditions || {
         replyStatus: ['unreplied'],
         ratings: [5, 4, 3, 2, 1],
@@ -29,43 +28,40 @@ export function ReviewFilter({ onFilterChange, initialConditions }: ReviewFilter
         customEndDate: ''
     })
 
-    // 内部変更用の一時State（「設定する」ボタンで確定するため）
-    const [tempConditions, setTempConditions] = useState<FilterConditions>(conditions)
-
-    useEffect(() => {
-        setTempConditions(conditions)
-    }, [conditions])
+    // フィルター変更時に即時反映
+    const updateConditions = (newConditions: FilterConditions) => {
+        setConditions(newConditions)
+        onFilterChange(newConditions)
+    }
 
     const toggleReplyStatus = (status: 'unreplied' | 'replied') => {
-        setTempConditions(prev => {
-            const exists = prev.replyStatus.includes(status)
-            if (exists) {
-                return { ...prev, replyStatus: prev.replyStatus.filter(s => s !== status) }
-            } else {
-                return { ...prev, replyStatus: [...prev.replyStatus, status] }
-            }
-        })
+        const exists = conditions.replyStatus.includes(status)
+        let newStatus
+        if (exists) {
+            newStatus = conditions.replyStatus.filter(s => s !== status)
+        } else {
+            newStatus = [...conditions.replyStatus, status]
+        }
+        updateConditions({ ...conditions, replyStatus: newStatus })
     }
 
     const toggleRating = (rating: number) => {
-        setTempConditions(prev => {
-            const exists = prev.ratings.includes(rating)
-            if (exists) {
-                return { ...prev, ratings: prev.ratings.filter(r => r !== rating) }
-            } else {
-                return { ...prev, ratings: [...prev.ratings, rating] }
-            }
-        })
+        const exists = conditions.ratings.includes(rating)
+        let newRatings
+        if (exists) {
+            newRatings = conditions.ratings.filter(r => r !== rating)
+        } else {
+            newRatings = [...conditions.ratings, rating]
+        }
+        updateConditions({ ...conditions, ratings: newRatings })
     }
 
     const setDateRange = (range: FilterConditions['dateRange']) => {
-        setTempConditions(prev => ({ ...prev, dateRange: range }))
+        updateConditions({ ...conditions, dateRange: range })
     }
 
-    const handleApply = () => {
-        setConditions(tempConditions)
-        onFilterChange(tempConditions)
-        setIsOpen(false)
+    const setCustomDate = (key: 'customStartDate' | 'customEndDate', value: string) => {
+        updateConditions({ ...conditions, dateRange: 'custom', [key]: value })
     }
 
     const handleReset = () => {
@@ -76,136 +72,92 @@ export function ReviewFilter({ onFilterChange, initialConditions }: ReviewFilter
             customStartDate: '',
             customEndDate: ''
         }
-        setTempConditions(defaultConditions)
-    }
-
-    // 現在のアクティブなフィルター数をカウント（バッジ用）
-    const getActiveCount = () => {
-        let count = 0
-        if (conditions.replyStatus.length < 2) count++ // どちらかのみ選択時
-        if (conditions.ratings.length < 5) count++ // 一部のみ選択時
-        if (conditions.dateRange !== 'all') count++
-        return count
+        updateConditions(defaultConditions)
     }
 
     return (
-        <div className="bg-background rounded-lg border shadow-sm mb-4 overflow-hidden">
-            <button
-                onClick={() => setIsOpen(!isOpen)}
-                className="w-full flex items-center justify-between p-4 bg-muted/10 hover:bg-muted/20 transition-colors"
-            >
-                <div className="flex items-center gap-2">
-                    <span className="font-bold text-sm text-foreground/80">絞り込みをする</span>
-                    {getActiveCount() > 0 && (
-                        <span className="bg-primary text-primary-foreground text-xs px-2 py-0.5 rounded-full">
-                            {getActiveCount()}
-                        </span>
-                    )}
-                </div>
-                {isOpen ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
-            </button>
+        <div className="bg-card rounded-lg border shadow-sm mb-4">
+            <div className="p-4 border-b bg-muted/10 flex justify-between items-center">
+                <span className="font-bold text-sm text-foreground/80">絞り込み条件</span>
+                <Button variant="ghost" size="sm" onClick={handleReset} className="h-auto py-1 px-2 text-xs text-muted-foreground hover:text-foreground">
+                    リセット
+                </Button>
+            </div>
 
-            {isOpen && (
-                <div className="p-4 space-y-6 border-t bg-card">
-                    {/* ビジネスアカウント (モック) */}
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium text-muted-foreground">ビジネスアカウント</label>
-                        <div>
-                            <Button variant="outline" className="w-full justify-start text-muted-foreground" disabled>
-                                <span className="mr-2">⚡</span> 全てのビジネスアカウント
-                            </Button>
-                        </div>
-                    </div>
-
-                    {/* 返信状況 */}
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium text-muted-foreground">返信状況</label>
-                        <div className="flex flex-wrap gap-2">
-                            <FilterChip
-                                label="未返信"
-                                active={tempConditions.replyStatus.includes('unreplied')}
-                                onClick={() => toggleReplyStatus('unreplied')}
-                            />
-                            <FilterChip
-                                label="返信済み"
-                                active={tempConditions.replyStatus.includes('replied')}
-                                onClick={() => toggleReplyStatus('replied')}
-                            />
-                        </div>
-                    </div>
-
-                    {/* クチコミ評価 */}
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium text-muted-foreground">クチコミ評価</label>
-                        <div className="flex flex-wrap gap-2">
-                            {[5, 4, 3, 2, 1].map(rating => (
-                                <FilterChip
-                                    key={rating}
-                                    label={`★ ${rating}`}
-                                    active={tempConditions.ratings.includes(rating)}
-                                    onClick={() => toggleRating(rating)}
-                                    color="amber"
-                                />
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* 投稿日 */}
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium text-muted-foreground">投稿日</label>
-                        <div className="flex flex-wrap gap-2 mb-3">
-                            {[
-                                { label: '全期間', value: 'all' },
-                                { label: '1週間', value: '1week' },
-                                { label: '1ヶ月', value: '1month' },
-                                { label: '3ヶ月', value: '3months' }, // 4半期
-                                { label: '半年', value: '6months' },
-                                { label: '1年', value: '1year' },
-                            ].map((item) => (
-                                <FilterChip
-                                    key={item.value}
-                                    label={item.label}
-                                    active={tempConditions.dateRange === item.value}
-                                    onClick={() => setDateRange(item.value as any)}
-                                />
-                            ))}
-                        </div>
-
-                        {/* カスタム期間 (シンプルにInput dateを使用) */}
-                        <div className="flex items-center gap-2 bg-muted/20 p-2 rounded-md">
-                            <span className="text-xs text-muted-foreground whitespace-nowrap">カスタム:</span>
-                            <input
-                                type="date"
-                                className="bg-transparent border rounded px-2 py-1 text-sm w-full"
-                                value={tempConditions.customStartDate}
-                                onChange={(e) => setTempConditions(prev => ({ ...prev, dateRange: 'custom', customStartDate: e.target.value }))}
-                            />
-                            <span className="text-muted-foreground">-</span>
-                            <input
-                                type="date"
-                                className="bg-transparent border rounded px-2 py-1 text-sm w-full"
-                                value={tempConditions.customEndDate}
-                                onChange={(e) => setTempConditions(prev => ({ ...prev, dateRange: 'custom', customEndDate: e.target.value }))}
-                            />
-                        </div>
-                    </div>
-
-                    {/* アクションボタン */}
-                    <div className="flex items-center justify-between pt-4 border-t gap-3">
-                        <Button variant="ghost" size="sm" onClick={handleReset} className="text-muted-foreground">
-                            リセット
-                        </Button>
-                        <div className="flex gap-2">
-                            <Button variant="outline" size="sm" onClick={() => setIsOpen(false)}>
-                                キャンセル
-                            </Button>
-                            <Button size="sm" onClick={handleApply}>
-                                設定する
-                            </Button>
-                        </div>
+            <div className="p-4 space-y-6">
+                {/* 返信状況 */}
+                <div className="space-y-2">
+                    <label className="text-sm font-medium text-muted-foreground">返信状況</label>
+                    <div className="flex flex-wrap gap-2">
+                        <FilterChip
+                            label="未返信"
+                            active={conditions.replyStatus.includes('unreplied')}
+                            onClick={() => toggleReplyStatus('unreplied')}
+                        />
+                        <FilterChip
+                            label="返信済み"
+                            active={conditions.replyStatus.includes('replied')}
+                            onClick={() => toggleReplyStatus('replied')}
+                        />
                     </div>
                 </div>
-            )}
+
+                {/* クチコミ評価 */}
+                <div className="space-y-2">
+                    <label className="text-sm font-medium text-muted-foreground">クチコミ評価</label>
+                    <div className="flex flex-wrap gap-2">
+                        {[5, 4, 3, 2, 1].map(rating => (
+                            <FilterChip
+                                key={rating}
+                                label={`★ ${rating}`}
+                                active={conditions.ratings.includes(rating)}
+                                onClick={() => toggleRating(rating)}
+                                color="amber"
+                            />
+                        ))}
+                    </div>
+                </div>
+
+                {/* 投稿日 */}
+                <div className="space-y-2">
+                    <label className="text-sm font-medium text-muted-foreground">投稿日</label>
+                    <div className="flex flex-wrap gap-2 mb-3">
+                        {[
+                            { label: '全期間', value: 'all' },
+                            { label: '1週間', value: '1week' },
+                            { label: '1ヶ月', value: '1month' },
+                            { label: '3ヶ月', value: '3months' },
+                            { label: '半年', value: '6months' },
+                            { label: '1年', value: '1year' },
+                        ].map((item) => (
+                            <FilterChip
+                                key={item.value}
+                                label={item.label}
+                                active={conditions.dateRange === item.value}
+                                onClick={() => setDateRange(item.value as any)}
+                            />
+                        ))}
+                    </div>
+
+                    {/* カスタム期間 */}
+                    <div className="flex items-center gap-2 bg-muted/20 p-2 rounded-md">
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">カスタム:</span>
+                        <input
+                            type="date"
+                            className="bg-transparent border rounded px-2 py-1 text-sm w-full"
+                            value={conditions.customStartDate}
+                            onChange={(e) => setCustomDate('customStartDate', e.target.value)}
+                        />
+                        <span className="text-muted-foreground">-</span>
+                        <input
+                            type="date"
+                            className="bg-transparent border rounded px-2 py-1 text-sm w-full"
+                            value={conditions.customEndDate}
+                            onChange={(e) => setCustomDate('customEndDate', e.target.value)}
+                        />
+                    </div>
+                </div>
+            </div>
         </div>
     )
 }
