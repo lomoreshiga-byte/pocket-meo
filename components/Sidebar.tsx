@@ -48,6 +48,11 @@ const navItems = [
         icon: ClipboardList,
     },
     {
+        label: '店舗情報管理',
+        href: '/location',
+        icon: Store,
+    },
+    {
         label: '設定',
         href: '/settings',
         icon: Settings,
