@@ -27,6 +27,9 @@ export async function signInWithFacebook() {
         options: {
             redirectTo: `${typeof window !== 'undefined' ? window.location.origin : ''}/auth/callback`,
             scopes: 'instagram_basic,pages_show_list',
+            queryParams: {
+                auth_type: 'reauthenticate',
+            },
         },
     })
     return { data, error }
