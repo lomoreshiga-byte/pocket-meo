@@ -278,7 +278,7 @@ export default function AnalyticsPage() {
                     </CardContent>
                 </Card>
                 {/* 検索クエリランキング */}
-                <Card>
+                <Card className="col-span-1 lg:col-span-2">
                     <CardHeader>
                         <CardTitle>検索クエリランキング (上位キーワード)</CardTitle>
                         <CardDescription>
@@ -315,5 +315,6 @@ export default function AnalyticsPage() {
                     </CardContent>
                 </Card>
             </div>
-            )
+        </div>
+    )
 }
