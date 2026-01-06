@@ -40,6 +40,7 @@ interface PostsClientProps {
     userId: string | null
     error: string | null
     debugCookies?: string[]
+    debugIntegrations?: string[]
 }
 
 export default function PostsClient({
@@ -48,7 +49,8 @@ export default function PostsClient({
     instagramToken,
     userId,
     error: serverError,
-    debugCookies
+    debugCookies,
+    debugIntegrations
 }: PostsClientProps) {
     const router = useRouter()
     const [localPosts] = useState<Post[]>(mockGbpPosts)
