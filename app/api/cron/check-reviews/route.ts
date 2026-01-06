@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
+export const dynamic = 'force-dynamic'
+
 // This would typically be triggered by Vercel Cron or an external scheduler
 export async function GET(request: Request) {
     // In a real scenario, you'd want to verify a secret token to prevent unauthorized access
