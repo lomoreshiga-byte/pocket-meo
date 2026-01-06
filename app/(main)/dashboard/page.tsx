@@ -47,8 +47,12 @@ export default function DashboardPage() {
     return (
         <div className="min-h-screen bg-slate-50/50 md:bg-transparent">
             {/* ヘッダー (Mobile & PC Unified) */}
-            <div className="pt-safe pb-6 px-6 md:pt-0 md:px-0 md:pb-8 sticky top-0 z-10 w-full border-b border-border/50 text-center" style={{ backgroundColor: '#ffffff' }}>
-                <h1 className="text-2xl font-bold text-gray-900">ダッシュボード</h1>
+            <div className="sticky top-0 z-10 w-full bg-white border-b border-border/50" style={{ backgroundColor: '#ffffff' }}>
+                <div className="pt-safe">
+                    <div className="flex items-center justify-center h-16 px-6">
+                        <h1 className="text-xl font-bold text-gray-900">ダッシュボード</h1>
+                    </div>
+                </div>
             </div>
 
             {/* アクションカード */}
