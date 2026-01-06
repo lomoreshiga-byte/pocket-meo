@@ -83,6 +83,7 @@ export default async function PostsPage() {
             instagramToken={instagramToken}
             userId={session?.user?.id || null}
             error={error}
+            debugCookies={cookieStore.getAll().map(c => c.name)}
         />
     )
 }
