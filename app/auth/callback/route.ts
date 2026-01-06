@@ -7,18 +7,13 @@ export const dynamic = 'force-dynamic'
 export async function GET(request: Request) {
     const requestUrl = new URL(request.url)
     const code = requestUrl.searchParams.get('code')
-    let redirectTo = requestUrl.searchParams.get('provider') === 'instagram'
-        ? '/settings/integrations?status=success'
-        : '/dashboard'
+
+    // Default redirect
+    let redirectTo = '/dashboard'
 
     if (code) {
         const cookieStore = cookies()
 
-        // We need to capture the response to set cookies on it
-        // We'll create the response object at the very end using the final redirectTo
-
-        // Create a temporary client just to exchange the code
-        // We will manually handle cookies later
         const supabase = createServerClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
             process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -37,63 +32,39 @@ export async function GET(request: Request) {
             }
         )
 
-        const { data: { session } } = await supabase.auth.exchangeCodeForSession(code)
+        try {
+            const { data: { session }, error } = await supabase.auth.exchangeCodeForSession(code)
 
-        // Debug params
-        const hasSession = !!session
-        const hasUser = !!session?.user
-        const hasToken = !!session?.provider_token
+            if (error) throw error
 
-        redirectTo += `&debug_session=${hasSession ? 'YES' : 'NO'}`
-        redirectTo += `&debug_user=${hasUser ? 'YES' : 'NO'}`
-        redirectTo += `&debug_token=${hasToken ? 'YES' : 'NO'}`
+            if (session) {
+                // Check if this is an Instagram integration flow
+                // We check the requested provider request param or the user metadata
+                // Note: provider param might be lost in some redirect chains, but let's check.
+                const urlParams = new URLSearchParams(requestUrl.search)
+                const isInstagram = urlParams.get('provider') === 'instagram'
+                    || requestUrl.searchParams.get('provider') === 'instagram'
 
-        if (session?.user && session.provider_token) {
-            try {
-                const urlProvider = requestUrl.searchParams.get('provider')
-                const appMetadataProvider = session.user.app_metadata.provider
-                const provider = urlProvider || appMetadataProvider || 'google'
-                redirectTo += `&debug_provider=${provider}`
-
-                const searchProvider = provider === 'instagram' ? 'facebook' : provider
-                const identity = session.user.identities?.find((id: { provider: string }) => id.provider === searchProvider)
-
-                // Use authenticated client (Supabase) which has the user's rights via RLS
-                // verification: The `supabase` client is already authenticated with the session from exchangeCodeForSession
-
-                // Upsert into integrations table
-                const { data: savedData, error: dbError } = await supabase
-                    .from('integrations')
-                    .upsert({
-                        user_id: session.user.id,
-                        provider: provider === 'facebook' ? 'instagram' : provider,
-                        provider_account_id: identity?.id,
-                        access_token: session.provider_token,
-                        refresh_token: session.provider_refresh_token,
-                        expires_at: session.expires_at,
-                        updated_at: new Date().toISOString(),
-                        meta_data: {
-                            scopes: session.provider_token ? 'granted' : 'missing' // Just debugging metadata
+                // If we have a provider token, this is likely a fresh link/login
+                if (session.provider_token) {
+                    // Decide where to go
+                    if (isInstagram) {
+                        // Pass the token to the client settings page to save it
+                        const params = new URLSearchParams()
+                        params.set('provider_token', session.provider_token)
+                        if (session.provider_refresh_token) {
+                            params.set('refresh_token', session.provider_refresh_token)
                         }
-                    }, { onConflict: 'user_id, provider' })
-                    .select()
-                    .single()
+                        params.set('status', 'captured_by_server')
 
-                if (dbError) {
-                    console.error('Failed to save integration token:', dbError)
-                    redirectTo = `/settings/integrations?error=${encodeURIComponent(dbError.message)}&details=${encodeURIComponent(JSON.stringify(dbError))}`
-                } else if (!savedData) {
-                    console.error('Saved but no data returned')
-                    redirectTo = `/settings/integrations?error=SaveVerificationFailed&details=NoDataReturned`
-                } else {
-                    redirectTo += `&debug_saved=YES`
+                        redirectTo = `/settings/integrations?${params.toString()}`
+                    }
                 }
-            } catch (err: any) {
-                console.error('Error saving integration token:', err)
-                redirectTo = `/settings/integrations?error=UnexpectedError&details=${encodeURIComponent(err.message)}`
             }
-        } else {
-            redirectTo += `&debug_saved=SKIPPED`
+        } catch (error) {
+            console.error('Auth Callback Error:', error)
+            // Still redirect to dashboard or settings to handle error
+            redirectTo = '/dashboard?error=auth_callback_failed'
         }
     }
 
