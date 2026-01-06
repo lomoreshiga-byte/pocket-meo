@@ -56,8 +56,13 @@ export async function GET(request: Request) {
                     )
                 }
 
+                if (!identity) {
+                    console.warn('Facebook identity not found in session')
+                    // Try to proceed anyway, or error? Proceeding, but logging.
+                }
+
                 // Upsert into integrations table
-                const { error: dbError } = await upsertClient
+                const { data: savedData, error: dbError } = await upsertClient
                     .from('integrations')
                     .upsert({
                         user_id: session.user.id,
@@ -68,10 +73,17 @@ export async function GET(request: Request) {
                         expires_at: session.expires_at,
                         updated_at: new Date().toISOString()
                     }, { onConflict: 'user_id, provider' })
+                    .select()
+                    .single()
 
                 if (dbError) {
                     console.error('Failed to save integration token:', dbError)
                     return NextResponse.redirect(`${requestUrl.origin}/settings/integrations?error=${encodeURIComponent(dbError.message)}&details=${encodeURIComponent(JSON.stringify(dbError))}`)
+                }
+
+                if (!savedData) {
+                    console.error('Saved but no data returned')
+                    return NextResponse.redirect(`${requestUrl.origin}/settings/integrations?error=SaveVerificationFailed&details=NoDataReturned`)
                 }
             } catch (err: any) {
                 console.error('Error saving integration token:', err)
@@ -87,7 +99,7 @@ export async function GET(request: Request) {
 
     // URL to redirect to after sign in process completes
     const redirectTo = requestUrl.searchParams.get('provider') === 'instagram'
-        ? '/settings/integrations'
+        ? '/settings/integrations?status=success'
         : '/dashboard'
 
     return NextResponse.redirect(requestUrl.origin + redirectTo)
