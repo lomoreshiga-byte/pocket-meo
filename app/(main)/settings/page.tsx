@@ -95,7 +95,7 @@ export default function SettingsPage() {
                         />
                         <SettingItem
                             label="通知設定"
-                            description="プッシュ通知、メール通知"
+                            description="LINE通知"
                             href="/settings/notifications"
                         />
                     </div>
