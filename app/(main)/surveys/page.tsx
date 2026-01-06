@@ -31,16 +31,20 @@ export default function SurveyDashboardPage() {
 
     return (
         <div className="min-h-screen bg-white pb-20">
-            <div className="pt-safe px-6 pb-6 sticky top-0 z-10 bg-white border-b border-border/50" style={{ backgroundColor: '#ffffff' }}>
-                <div className="flex flex-col gap-2">
-                    <h1 className="text-2xl font-bold tracking-tight text-gray-900">アンケート管理</h1>
-                    <p className="text-muted-foreground">
-                        お客様に以下のQRコードを読み取っていただくことで、AIによる口コミ生成機能を提供できます。
-                    </p>
+            <div className="sticky top-0 z-10 w-full bg-white border-b border-border/50" style={{ backgroundColor: '#ffffff' }}>
+                <div className="pt-safe">
+                    <div className="flex items-center justify-center h-16 px-6">
+                        <h1 className="text-xl font-bold tracking-tight text-gray-900">アンケート管理</h1>
+                    </div>
                 </div>
             </div>
 
-            <div className="p-6 space-y-6">
+            <div className="p-6 space-y-6 pt-6 md:pt-8 bg-white">
+                <div className="text-center md:text-left mb-2">
+                    <p className="text-muted-foreground text-sm">
+                        お客様に以下のQRコードを読み取っていただくことで、AIによる口コミ生成機能を提供できます。
+                    </p>
+                </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* QRコードカード */}

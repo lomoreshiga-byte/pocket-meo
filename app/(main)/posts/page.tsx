@@ -142,25 +142,32 @@ export default function PostsPage() {
     return (
         <div className="min-h-screen bg-white pb-safe">
             {/* ヘッダー */}
-            <div className="pt-safe px-6 pb-6 sticky top-0 z-10 bg-white border-b border-border/50" style={{ backgroundColor: '#ffffff' }}>
-                <div className="flex justify-between items-start">
-                    <div>
-                        <h1 className="text-2xl font-bold text-foreground">投稿</h1>
-                        <p className="text-muted-foreground text-sm mt-1">
-                            GBPとInstagramの投稿管理
-                        </p>
+            <div className="sticky top-0 z-10 w-full bg-white border-b border-border/50" style={{ backgroundColor: '#ffffff' }}>
+                <div className="pt-safe">
+                    <div className="relative flex items-center justify-center h-16 px-6">
+                        <h1 className="text-xl font-bold text-foreground">投稿</h1>
+
+                        {/* 右側アクションエリア (絶対配置) */}
+                        <div className="absolute right-6">
+                            <Button
+                                variant="secondary"
+                                size="sm"
+                                onClick={loadInstagramPosts}
+                                disabled={loading}
+                            >
+                                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                            </Button>
+                        </div>
                     </div>
-                    <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={loadInstagramPosts}
-                        disabled={loading}
-                    >
-                        <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-                    </Button>
                 </div>
             </div>
-            <div className="px-4 space-y-4">
+
+            <div className="px-4 space-y-4 pt-6 md:pt-8">
+                <div className="text-center md:text-left">
+                    <p className="text-muted-foreground text-sm">
+                        GBPとInstagramの投稿管理
+                    </p>
+                </div>
                 {error && (
                     <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-md flex items-center gap-2">
                         <AlertCircle className="w-4 h-4" />

@@ -201,29 +201,33 @@ export default function ReviewsPage() {
     return (
         <div className="min-h-screen bg-white">
             {/* ヘッダー */}
-            <div className="pt-safe px-6 pb-6 border-b border-border/50 sticky top-0 z-10 bg-white" style={{ backgroundColor: '#ffffff' }}>
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <h1 className="text-2xl font-bold text-gray-900">クチコミ管理</h1>
-                        <Button
-                            variant="secondary"
-                            size="sm"
-                            className="h-7 w-7 p-0 rounded-full bg-muted hover:bg-muted/80 text-foreground border-0"
-                            onClick={loadFromGoogle}
-                            disabled={syncing}
-                        >
-                            <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin' : ''}`} />
-                        </Button>
+            <div className="sticky top-0 z-10 w-full bg-white border-b border-border/50" style={{ backgroundColor: '#ffffff' }}>
+                <div className="pt-safe">
+                    <div className="relative flex items-center justify-center h-16 px-6">
+                        <h1 className="text-xl font-bold text-gray-900">クチコミ管理</h1>
+
+                        {/* 右側アクションエリア (絶対配置) */}
+                        <div className="absolute right-6 flex items-center gap-2">
+                            {unrepliedCount > 0 && (
+                                <span className="bg-primary text-primary-foreground px-2 py-0.5 rounded text-xs font-medium">
+                                    未返信 {unrepliedCount}
+                                </span>
+                            )}
+                            <Button
+                                variant="secondary"
+                                size="sm"
+                                className="h-7 w-7 p-0 rounded-full bg-muted hover:bg-muted/80 text-foreground border-0"
+                                onClick={loadFromGoogle}
+                                disabled={syncing}
+                            >
+                                <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin' : ''}`} />
+                            </Button>
+                        </div>
                     </div>
-                    {unrepliedCount > 0 && (
-                        <span className="bg-primary text-primary-foreground px-2 py-0.5 rounded text-xs font-medium">
-                            未返信 {unrepliedCount}
-                        </span>
-                    )}
                 </div>
             </div>
 
-            <div className="px-4 pb-24">
+            <div className="px-4 pb-24 pt-6 md:pt-8">
                 {error && (
                     <div className="mb-4 bg-destructive/10 text-destructive text-sm p-3 rounded-md flex items-center gap-2 border border-destructive/20">
                         <AlertCircle className="w-4 h-4 flex-shrink-0" />

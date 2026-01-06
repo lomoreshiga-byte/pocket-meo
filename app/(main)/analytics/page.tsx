@@ -179,21 +179,23 @@ export default function AnalyticsPage() {
 
     return (
         <div className="min-h-screen bg-white">
-            <div className="pt-safe px-6 pb-6 sticky top-0 z-10 bg-white border-b border-border/50" style={{ backgroundColor: '#ffffff' }}>
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div>
-                        <h1 className="text-2xl font-bold">パフォーマンス分析</h1>
-                        <p className="text-muted-foreground">過去30日間のインサイト情報</p>
+            <div className="sticky top-0 z-10 w-full bg-white border-b border-border/50" style={{ backgroundColor: '#ffffff' }}>
+                <div className="pt-safe">
+                    <div className="flex items-center justify-center h-16 px-6">
+                        <h1 className="text-xl font-bold">パフォーマンス分析</h1>
                     </div>
+                </div>
+            </div>
+
+            <div className="p-6 space-y-6 pt-6 md:pt-8">
+                <div className="text-center md:text-left space-y-2">
+                    <p className="text-muted-foreground text-sm">過去30日間のインサイト情報</p>
                     {isMock && (
-                        <div className="bg-amber-100 text-amber-800 text-xs px-3 py-1 rounded-full font-medium border border-amber-200">
+                        <div className="inline-block bg-amber-100 text-amber-800 text-xs px-3 py-1 rounded-full font-medium border border-amber-200">
                             ※ Google承認待ちのためデモデータを表示中
                         </div>
                     )}
                 </div>
-            </div>
-
-            <div className="p-6 space-y-6">
 
                 {/* 重要指標サマリー */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

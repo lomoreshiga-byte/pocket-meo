@@ -32,16 +32,20 @@ export default function LocationPage() {
 
     return (
         <div className="min-h-screen bg-white pb-20">
-            <div className="pt-safe px-6 pb-6 sticky top-0 z-10 bg-white border-b border-border/50" style={{ backgroundColor: '#ffffff' }}>
-                <div className="flex flex-col gap-2">
-                    <h1 className="text-2xl font-bold tracking-tight text-gray-900">店舗情報管理</h1>
-                    <p className="text-muted-foreground">
-                        Googleマップに表示される店舗情報の確認・編集ができます。
-                    </p>
+            <div className="sticky top-0 z-10 w-full bg-white border-b border-border/50" style={{ backgroundColor: '#ffffff' }}>
+                <div className="pt-safe">
+                    <div className="flex items-center justify-center h-16 px-6">
+                        <h1 className="text-xl font-bold tracking-tight text-gray-900">店舗情報管理</h1>
+                    </div>
                 </div>
             </div>
 
-            <div className="p-6 space-y-6">
+            <div className="p-6 space-y-6 pt-6 md:pt-8 bg-white">
+                <div className="text-center md:text-left mb-2">
+                    <p className="text-muted-foreground text-sm">
+                        Googleマップに表示される店舗情報の確認・編集ができます。
+                    </p>
+                </div>
 
                 {/* 緊急対応: 臨時休業 */}
                 <Card className="border-red-200 bg-red-50">
