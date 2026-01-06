@@ -27,8 +27,15 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Similar logic: fetch token from 'integrations' table or session
-    const providerToken = session.provider_token
+    // Fetch token from 'integrations' table to ensure we get the correct provider's token
+    const { data: integration } = await supabase
+        .from('integrations')
+        .select('access_token')
+        .eq('user_id', session.user.id)
+        .eq('provider', 'instagram') // Saved as 'instagram' in callback
+        .single()
+
+    const providerToken = integration?.access_token
 
     if (!providerToken) {
         // Fallback mock data

@@ -27,10 +27,15 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // In a real implementation, we would fetch the token from our 'integrations' table
-    // For now, we'll try to use the session provider token if available (works for initial session)
-    // or return a mock response if no token is found to unblock the UI.
-    const providerToken = session.provider_token
+    // Fetch token from 'integrations' table
+    const { data: integration } = await supabase
+        .from('integrations')
+        .select('access_token')
+        .eq('user_id', session.user.id)
+        .eq('provider', 'google')
+        .single()
+
+    const providerToken = integration?.access_token || session.provider_token // Fallback to session token for initial login if DB fetch fails (optional)
 
     if (!providerToken) {
         // Fallback to mock data for demo purposes if real integration isn't fully set up
