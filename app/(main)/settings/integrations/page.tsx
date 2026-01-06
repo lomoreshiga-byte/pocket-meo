@@ -66,18 +66,33 @@ export default function IntegrationsPage() {
         setLinking(true)
         try {
             const { data: { session } } = await supabase.auth.getSession()
-            const fbIdentity = session?.user?.identities?.find(i => i.provider === 'facebook')
+            if (!session) return
+
+            // 1. Unlink Identity
+            const fbIdentity = session.user.identities?.find(i => i.provider === 'facebook')
             if (fbIdentity) {
                 const { error } = await supabase.auth.unlinkIdentity(fbIdentity)
                 if (error) throw error
             }
-            // Update UI
+
+            // 2. Delete from integrations table
+            await supabase
+                .from('integrations')
+                .delete()
+                .eq('user_id', session.user.id)
+                .eq('provider', 'instagram')
+
+            // 3. Refresh session to ensure identity is gone locally
+            await supabase.auth.refreshSession()
+
+            // 4. Update UI immediately
             setInstagramLinked(false)
-            alert('連携を解除しました。再度「instagramと連携する」ボタンを押してください。')
-            window.location.reload()
+            alert('連携を解除しました。再度「Instagramと連携する」ボタンを押してください。')
+
         } catch (err: any) {
             console.error('Unlink error:', err)
             setError('連携解除に失敗しました: ' + err.message)
+        } finally {
             setLinking(false)
         }
     }
