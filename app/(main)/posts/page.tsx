@@ -14,6 +14,7 @@ export default function PostsPage() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [debugCookies, setDebugCookies] = useState<string[]>([])
+    const [debugIntegrations, setDebugIntegrations] = useState<string[]>([])
 
     useEffect(() => {
         fetchData()
@@ -49,6 +50,9 @@ export default function PostsPage() {
             setPosts(data.posts || [])
             setGoogleToken(data.googleToken || null)
             setInstagramToken(data.instagramToken || null)
+            if (data.debugIntegrations) {
+                setDebugIntegrations(data.debugIntegrations)
+            }
 
         } catch (err: any) {
             console.error('Fetch error:', err)
@@ -74,6 +78,7 @@ export default function PostsPage() {
             userId={userId}
             error={error}
             debugCookies={debugCookies}
+            debugIntegrations={debugIntegrations}
         />
     )
 }

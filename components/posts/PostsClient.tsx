@@ -164,6 +164,7 @@ export default function PostsClient({
                     <p>IG Token: {instagramToken ? 'YES' : 'NO'}</p>
                     <p>IG Posts: {igPosts.length}</p>
                     <p>Cookies: {debugCookies?.join(', ') || 'None'}</p>
+                    <p>DB Rows: {debugIntegrations?.join(', ') || 'None'}</p>
                 </div>
 
                 {!refreshing && igPosts.length === 0 && !serverError && (
