@@ -206,14 +206,25 @@ export default function PostsPage() {
                     </p>
                 </div>
                 {error && (
-                    <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-md flex items-center gap-2">
-                        <AlertCircle className="w-4 h-4" />
-                        {error}
-                        <Link href="/settings/integrations" className="underline font-bold ml-1">
+                    <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-md flex flex-col gap-2">
+                        <div className="flex items-center gap-2">
+                            <AlertCircle className="w-4 h-4" />
+                            {error}
+                        </div>
+                        <Link href="/settings/integrations" className="underline font-bold ml-6">
                             連携設定を確認
                         </Link>
                     </div>
                 )}
+
+                {/* Temporary Debug Info */}
+                <div className="p-4 bg-gray-100 rounded text-xs font-mono break-all mt-4">
+                    <p className="font-bold">Debug Info:</p>
+                    <p>Loading: {loading ? 'YES' : 'NO'}</p>
+                    <p>Error: {error || 'None'}</p>
+                    <p>IG Posts: {igPosts.length}</p>
+                    <DebugSession supabase={supabase} />
+                </div>
 
                 {!loading && igPosts.length === 0 && !error && (
                     <div className="bg-blue-50 text-blue-700 text-sm p-3 rounded-md flex items-center gap-2">
@@ -379,5 +390,38 @@ function PostCard({ post, onSync, isSyncing }: { post: Post, onSync?: () => void
                 </div>
             </CardContent>
         </Card>
+    )
+}
+
+function DebugSession({ supabase }: { supabase: any }) {
+    const [sessionId, setSessionId] = useState<string>('Loading...')
+    const [tokenFound, setTokenFound] = useState<string>('Unknown')
+    const [cookie, setCookie] = useState<string>('')
+
+    useEffect(() => {
+        supabase.auth.getSession().then(({ data }: any) => {
+            const user = data.session?.user
+            setSessionId(user?.id || 'None')
+            if (user) {
+                // Check integration
+                supabase.from('integrations')
+                    .select('id')
+                    .eq('user_id', user.id)
+                    .eq('provider', 'instagram')
+                    .single()
+                    .then(({ data, error }: any) => {
+                        setTokenFound(data ? 'YES' : 'NO')
+                    })
+            }
+        })
+        setCookie(document.cookie)
+    }, [supabase])
+
+    return (
+        <div className="mt-2 text-[10px] text-gray-500">
+            <p>User ID: {sessionId}</p>
+            <p>Integration Found: {tokenFound}</p>
+            <p>Cookie Length: {cookie.length}</p>
+        </div>
     )
 }
