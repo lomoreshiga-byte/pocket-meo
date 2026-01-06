@@ -77,6 +77,11 @@ export async function GET(request: Request) {
                 console.error('Error saving integration token:', err)
                 return NextResponse.redirect(`${requestUrl.origin}/settings/integrations?error=UnexpectedError&details=${encodeURIComponent(err.message)}`)
             }
+        } else {
+            // Debug missing token/session
+            const errorType = !session ? 'NoSession' : !session.provider_token ? 'NoProviderToken' : 'Unknown'
+            console.error(`Callback error: ${errorType}`)
+            return NextResponse.redirect(`${requestUrl.origin}/settings/integrations?error=${errorType}&details=SessionOrTokenMissing`)
         }
     }
 
