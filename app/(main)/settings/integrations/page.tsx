@@ -61,6 +61,27 @@ export default function IntegrationsPage() {
         }
     }
 
+    const handleDisconnectInstagram = async () => {
+        if (!confirm('Instagram連携を解除しますか？\n解除した後、再度「連携する」ボタンを押して再接続してください。')) return
+        setLinking(true)
+        try {
+            const { data: { session } } = await supabase.auth.getSession()
+            const fbIdentity = session?.user?.identities?.find(i => i.provider === 'facebook')
+            if (fbIdentity) {
+                const { error } = await supabase.auth.unlinkIdentity(fbIdentity)
+                if (error) throw error
+            }
+            // Update UI
+            setInstagramLinked(false)
+            alert('連携を解除しました。再度「instagramと連携する」ボタンを押してください。')
+            window.location.reload()
+        } catch (err: any) {
+            console.error('Unlink error:', err)
+            setError('連携解除に失敗しました: ' + err.message)
+            setLinking(false)
+        }
+    }
+
     if (loading) {
         return <div className="min-h-screen bg-background flex items-center justify-center">読み込み中...</div>
     }
@@ -160,8 +181,13 @@ export default function IntegrationsPage() {
                                             <CheckCircle2 className="w-4 h-4" />
                                             <span>正常に接続されています</span>
                                         </div>
-                                        <Button variant="outline" className="w-full" disabled>
-                                            連携を解除（管理者にお問い合わせください）
+                                        <Button
+                                            variant="outline"
+                                            className="w-full text-destructive hover:text-destructive hover:bg-destructive/10"
+                                            onClick={handleDisconnectInstagram}
+                                            disabled={linking}
+                                        >
+                                            {linking ? '解除中...' : '連携を解除して再接続する'}
                                         </Button>
                                     </div>
                                 )}
