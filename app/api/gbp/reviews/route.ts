@@ -1,0 +1,62 @@
+import { NextResponse } from 'next/server'
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
+
+export async function GET(request: Request) {
+    const supabase = createRouteHandlerClient({ cookies })
+    const { data: { session } } = await supabase.auth.getSession()
+
+    if (!session) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // In a real implementation, we would fetch the token from our 'integrations' table
+    // For now, we'll try to use the session provider token if available (works for initial session)
+    // or return a mock response if no token is found to unblock the UI.
+    const providerToken = session.provider_token
+
+    if (!providerToken) {
+        // Fallback to mock data for demo purposes if real integration isn't fully set up
+        return NextResponse.json({
+            reviews: [
+                {
+                    reviewId: 'r1',
+                    reviewer: { displayName: '田中 太郎', profilePhotoUrl: 'https://ui-avatars.com/api/?name=T+T&background=random' },
+                    starRating: 'FIVE',
+                    comment: 'とても美味しかったです！また来ます。',
+                    createTime: new Date().toISOString(),
+                    replyComment: null
+                },
+                {
+                    reviewId: 'r2',
+                    reviewer: { displayName: '鈴木 花子', profilePhotoUrl: 'https://ui-avatars.com/api/?name=S+H&background=random' },
+                    starRating: 'FOUR',
+                    comment: '雰囲気は良いですが、少し待ちました。',
+                    createTime: new Date(Date.now() - 86400000).toISOString(),
+                    replyComment: 'ご来店ありがとうございます。お待たせして申し訳ございません。'
+                }
+            ]
+        })
+    }
+
+    try {
+        // API Call to Google My Business
+        // Note: This requires the Account ID and Location ID which we would also need to fetch/store.
+        const response = await fetch('https://mybusiness.googleapis.com/v4/accounts/{accountId}/locations/{locationId}/reviews', {
+            headers: {
+                Authorization: `Bearer ${providerToken}`
+            }
+        })
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch from Google')
+        }
+
+        const data = await response.json()
+        return NextResponse.json(data)
+
+    } catch (error) {
+        console.error('GBP API Error:', error)
+        return NextResponse.json({ error: 'Failed to fetch reviews' }, { status: 500 })
+    }
+}
