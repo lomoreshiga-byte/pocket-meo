@@ -9,8 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Plus, Image as ImageIcon, Calendar, CheckCircle2, RefreshCw, AlertCircle, Share2, MapPin } from 'lucide-react'
 import { Post } from '@/types'
 import { formatDate } from '@/lib/utils'
-import { supabase } from '@/lib/supabase'
-import { createBrowserClient } from '@supabase/auth-helpers-nextjs' // Unused, can be removed or kept if needed, but not used
+import { createBrowserClient } from '@supabase/auth-helpers-nextjs'
 import { fetchInstagramMedia, InstagramMedia } from '@/lib/instagram-api'
 import { createGBPPost, fetchGBPAccounts, fetchGBPLocations } from '@/lib/google-api'
 
@@ -36,10 +35,11 @@ const mockGbpPosts: Post[] = [
 ]
 
 export default function PostsPage() {
-
-    // Use the shared vanilla client (same as settings page)
-    // const supabase = createBrowserClient(...) // Removed
-    // Note: 'supabase' is now imported from '@/lib/supabase' at the top level
+    // Use createBrowserClient to ensure we access the cookie-based session set by the server callback
+    const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
 
     const [localPosts] = useState<Post[]>(mockGbpPosts)
     const [igPosts, setIgPosts] = useState<Post[]>([])
@@ -57,7 +57,7 @@ export default function PostsPage() {
         try {
             const { data: { session } } = await supabase.auth.getSession()
             if (!session) {
-                console.log('No session found')
+                console.log('No session found via createBrowserClient')
                 return
             }
 
