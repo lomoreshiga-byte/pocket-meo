@@ -31,137 +31,142 @@ export default function LocationPage() {
     }
 
     return (
-        <div className="space-y-6 pb-20">
-            <div className="flex flex-col gap-2">
-                <h1 className="text-2xl font-bold tracking-tight">店舗情報管理</h1>
-                <p className="text-muted-foreground">
-                    Googleマップに表示される店舗情報の確認・編集ができます。
-                </p>
+        <div className="min-h-screen bg-white pb-20">
+            <div className="pt-safe px-6 pb-6 sticky top-0 z-10 bg-white border-b border-border/50" style={{ backgroundColor: '#ffffff' }}>
+                <div className="flex flex-col gap-2">
+                    <h1 className="text-2xl font-bold tracking-tight text-gray-900">店舗情報管理</h1>
+                    <p className="text-muted-foreground">
+                        Googleマップに表示される店舗情報の確認・編集ができます。
+                    </p>
+                </div>
             </div>
 
-            {/* 緊急対応: 臨時休業 */}
-            <Card className="border-red-200 bg-red-50">
-                <CardHeader className="pb-3">
-                    <div className="flex items-center gap-2 text-red-700">
-                        <AlertTriangle className="w-5 h-5" />
-                        <CardTitle className="text-lg">臨時休業設定</CardTitle>
-                    </div>
-                </CardHeader>
-                <CardContent>
-                    <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                            <Label className="text-base font-medium">現在「営業中」として表示されています</Label>
-                            <p className="text-sm text-muted-foreground">
-                                急な休業の際にONにすると、Googleマップ上で「臨時休業」と表示されます。
-                            </p>
+            <div className="p-6 space-y-6">
+
+                {/* 緊急対応: 臨時休業 */}
+                <Card className="border-red-200 bg-red-50">
+                    <CardHeader className="pb-3">
+                        <div className="flex items-center gap-2 text-red-700">
+                            <AlertTriangle className="w-5 h-5" />
+                            <CardTitle className="text-lg">臨時休業設定</CardTitle>
                         </div>
-                        <Switch
-                            checked={isClosedTemporarily}
-                            onCheckedChange={setIsClosedTemporarily}
-                        />
-                    </div>
-                </CardContent>
-            </Card>
-
-            <Tabs defaultValue="basic" className="space-y-6">
-                <TabsList>
-                    <TabsTrigger value="basic">基本情報</TabsTrigger>
-                    <TabsTrigger value="hours">営業時間</TabsTrigger>
-                    {/* <TabsTrigger value="photos">写真</TabsTrigger> */}
-                </TabsList>
-
-                <TabsContent value="basic" className="space-y-6 pb-20">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>基本情報</CardTitle>
-                            <CardDescription>
-                                店舗の基本情報を編集します。変更はGoogleマップに反映されます。
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="space-y-2">
-                                <Label>店舗名</Label>
-                                <div className="flex items-center gap-2">
-                                    <StoreIcon className="w-4 h-4 text-muted-foreground shrink-0" />
-                                    <Input
-                                        value={formData.locationName}
-                                        onChange={(e) => setFormData({ ...formData, locationName: e.target.value })}
-                                    />
-                                </div>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="flex items-center justify-between">
+                            <div className="space-y-0.5">
+                                <Label className="text-base font-medium">現在「営業中」として表示されています</Label>
+                                <p className="text-sm text-muted-foreground">
+                                    急な休業の際にONにすると、Googleマップ上で「臨時休業」と表示されます。
+                                </p>
                             </div>
+                            <Switch
+                                checked={isClosedTemporarily}
+                                onCheckedChange={setIsClosedTemporarily}
+                            />
+                        </div>
+                    </CardContent>
+                </Card>
 
-                            <div className="space-y-2">
-                                <Label>住所</Label>
-                                <div className="flex items-center gap-2">
-                                    <MapPin className="w-4 h-4 text-muted-foreground shrink-0" />
-                                    <Input
-                                        value={formData.address}
-                                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                                    />
-                                </div>
-                            </div>
+                <Tabs defaultValue="basic" className="space-y-6">
+                    <TabsList>
+                        <TabsTrigger value="basic">基本情報</TabsTrigger>
+                        <TabsTrigger value="hours">営業時間</TabsTrigger>
+                        {/* <TabsTrigger value="photos">写真</TabsTrigger> */}
+                    </TabsList>
 
-                            <div className="space-y-2">
-                                <Label>電話番号</Label>
-                                <div className="flex items-center gap-2">
-                                    <Phone className="w-4 h-4 text-muted-foreground shrink-0" />
-                                    <Input
-                                        value={formData.phone}
-                                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label>ウェブサイト</Label>
-                                <div className="flex items-center gap-2">
-                                    <Globe className="w-4 h-4 text-muted-foreground shrink-0" />
-                                    <Input
-                                        value={formData.website}
-                                        onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="pt-4">
-                                <Button onClick={handleSave} disabled={loading} className="gap-2">
-                                    {loading ? <div className="animate-spin w-4 h-4 border-2 border-current border-t-transparent rounded-full" /> : <Save className="w-4 h-4" />}
-                                    変更を保存
-                                </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-
-                <TabsContent value="hours" className="pb-20">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>営業時間</CardTitle>
-                            <CardDescription>
-                                通常の営業時間を設定します。
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-6">
-                            {['月', '火', '水', '木', '金', '土', '日'].map((day) => (
-                                <div key={day} className="flex items-center justify-between py-2 border-b last:border-0">
-                                    <div className="w-20 font-medium">{day}曜日</div>
-                                    <div className="flex items-center gap-2 flex-1 justify-end sm:justify-start sm:pl-10">
-                                        <Input type="time" className="w-32" defaultValue="10:00" />
-                                        <span className="text-muted-foreground">~</span>
-                                        <Input type="time" className="w-32" defaultValue="20:00" />
+                    <TabsContent value="basic" className="space-y-6 pb-20">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>基本情報</CardTitle>
+                                <CardDescription>
+                                    店舗の基本情報を編集します。変更はGoogleマップに反映されます。
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label>店舗名</Label>
+                                    <div className="flex items-center gap-2">
+                                        <StoreIcon className="w-4 h-4 text-muted-foreground shrink-0" />
+                                        <Input
+                                            value={formData.locationName}
+                                            onChange={(e) => setFormData({ ...formData, locationName: e.target.value })}
+                                        />
                                     </div>
                                 </div>
-                            ))}
-                            <div className="pt-4">
-                                <Button onClick={handleSave} disabled={loading} className="gap-2">
-                                    {loading ? <div className="animate-spin w-4 h-4 border-2 border-current border-t-transparent rounded-full" /> : <Save className="w-4 h-4" />}
-                                    営業時間を保存
-                                </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-            </Tabs>
+
+                                <div className="space-y-2">
+                                    <Label>住所</Label>
+                                    <div className="flex items-center gap-2">
+                                        <MapPin className="w-4 h-4 text-muted-foreground shrink-0" />
+                                        <Input
+                                            value={formData.address}
+                                            onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label>電話番号</Label>
+                                    <div className="flex items-center gap-2">
+                                        <Phone className="w-4 h-4 text-muted-foreground shrink-0" />
+                                        <Input
+                                            value={formData.phone}
+                                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label>ウェブサイト</Label>
+                                    <div className="flex items-center gap-2">
+                                        <Globe className="w-4 h-4 text-muted-foreground shrink-0" />
+                                        <Input
+                                            value={formData.website}
+                                            onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="pt-4">
+                                    <Button onClick={handleSave} disabled={loading} className="gap-2">
+                                        {loading ? <div className="animate-spin w-4 h-4 border-2 border-current border-t-transparent rounded-full" /> : <Save className="w-4 h-4" />}
+                                        変更を保存
+                                    </Button>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    <TabsContent value="hours" className="pb-20">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>営業時間</CardTitle>
+                                <CardDescription>
+                                    通常の営業時間を設定します。
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-6">
+                                {['月', '火', '水', '木', '金', '土', '日'].map((day) => (
+                                    <div key={day} className="flex items-center justify-between py-2 border-b last:border-0">
+                                        <div className="w-20 font-medium">{day}曜日</div>
+                                        <div className="flex items-center gap-2 flex-1 justify-end sm:justify-start sm:pl-10">
+                                            <Input type="time" className="w-32" defaultValue="10:00" />
+                                            <span className="text-muted-foreground">~</span>
+                                            <Input type="time" className="w-32" defaultValue="20:00" />
+                                        </div>
+                                    </div>
+                                ))}
+                                <div className="pt-4">
+                                    <Button onClick={handleSave} disabled={loading} className="gap-2">
+                                        {loading ? <div className="animate-spin w-4 h-4 border-2 border-current border-t-transparent rounded-full" /> : <Save className="w-4 h-4" />}
+                                        営業時間を保存
+                                    </Button>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+                </Tabs>
+            </div>
         </div>
     )
 }

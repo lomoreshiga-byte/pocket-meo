@@ -25,15 +25,15 @@ export default function MobileMenuPage() {
     }
 
     return (
-        <div className="space-y-6 pb-20">
-            <div className="bg-primary text-primary-foreground -mx-4 -mt-4 p-8 pb-10 mb-[-20px] rounded-b-[2rem] shadow-lg">
-                <h1 className="text-2xl font-bold text-center">メニュー</h1>
-                <p className="text-center text-primary-foreground/80 text-sm mt-1">
+        <div className="min-h-screen bg-white pb-20">
+            <div className="pt-safe px-6 pb-6 text-center sticky top-0 z-10 bg-white border-b border-border/50" style={{ backgroundColor: '#ffffff' }}>
+                <h1 className="text-2xl font-bold text-gray-900">メニュー</h1>
+                <p className="text-muted-foreground text-sm mt-1">
                     すべての機能へアクセス
                 </p>
             </div>
 
-            <div className="space-y-4 px-1">
+            <div className="space-y-4 px-4">
                 <section>
                     <h2 className="text-sm font-semibold text-muted-foreground mb-2 px-2">店舗運営</h2>
                     <div className="space-y-2">

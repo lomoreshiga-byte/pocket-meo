@@ -178,143 +178,148 @@ export default function AnalyticsPage() {
     if (!data) return null
 
     return (
-        <div className="space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold">パフォーマンス分析</h1>
-                    <p className="text-muted-foreground">過去30日間のインサイト情報</p>
-                </div>
-                {isMock && (
-                    <div className="bg-amber-100 text-amber-800 text-xs px-3 py-1 rounded-full font-medium border border-amber-200">
-                        ※ Google承認待ちのためデモデータを表示中
+        <div className="min-h-screen bg-white">
+            <div className="pt-safe px-6 pb-6 sticky top-0 z-10 bg-white border-b border-border/50" style={{ backgroundColor: '#ffffff' }}>
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div>
+                        <h1 className="text-2xl font-bold">パフォーマンス分析</h1>
+                        <p className="text-muted-foreground">過去30日間のインサイト情報</p>
                     </div>
-                )}
+                    {isMock && (
+                        <div className="bg-amber-100 text-amber-800 text-xs px-3 py-1 rounded-full font-medium border border-amber-200">
+                            ※ Google承認待ちのためデモデータを表示中
+                        </div>
+                    )}
+                </div>
             </div>
 
-            {/* 重要指標サマリー */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">合計表示回数</CardTitle>
-                        <Eye className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{data.totalViews.toLocaleString()}</div>
-                        <p className="text-xs text-muted-foreground mt-1">過去30日間</p>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">反応数 (アクション)</CardTitle>
-                        <MousePointerClick className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{data.totalActions.toLocaleString()}</div>
-                        <p className="text-xs text-muted-foreground mt-1">ウェブサイト・ルート・通話</p>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">ルート検索</CardTitle>
-                        <MapPin className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{data.totalDirections.toLocaleString()}</div>
-                        <p className="text-xs text-muted-foreground mt-1">お店への行き方を検索</p>
-                    </CardContent>
-                </Card>
-            </div>
+            <div className="p-6 space-y-6">
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* 表示回数推移グラフ */}
-                <Card className="col-span-1 lg:col-span-2">
-                    <CardHeader>
-                        <CardTitle>検索・マップ表示回数の推移</CardTitle>
-                        <CardDescription>
-                            お客様がGoogleでお店を見つけた回数
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="h-[300px] w-full">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <LineChart data={data.viewsData}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                    <XAxis dataKey="date" fontSize={12} tickLine={false} axisLine={false} />
-                                    <YAxis fontSize={12} tickLine={false} axisLine={false} />
-                                    <Tooltip
-                                        contentStyle={{ backgroundColor: 'white', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                                    />
-                                    <Line type="monotone" dataKey="map" name="Googleマップ" stroke="#2563eb" strokeWidth={2} activeDot={{ r: 4 }} />
-                                    <Line type="monotone" dataKey="search" name="Google検索" stroke="#16a34a" strokeWidth={2} activeDot={{ r: 4 }} />
-                                </LineChart>
-                            </ResponsiveContainer>
-                        </div>
-                    </CardContent>
-                </Card>
+                {/* 重要指標サマリー */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">合計表示回数</CardTitle>
+                            <Eye className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{data.totalViews.toLocaleString()}</div>
+                            <p className="text-xs text-muted-foreground mt-1">過去30日間</p>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">反応数 (アクション)</CardTitle>
+                            <MousePointerClick className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{data.totalActions.toLocaleString()}</div>
+                            <p className="text-xs text-muted-foreground mt-1">ウェブサイト・ルート・通話</p>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">ルート検索</CardTitle>
+                            <MapPin className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{data.totalDirections.toLocaleString()}</div>
+                            <p className="text-xs text-muted-foreground mt-1">お店への行き方を検索</p>
+                        </CardContent>
+                    </Card>
+                </div>
 
-                {/* アクション内訳グラフ */}
-                <Card className="col-span-1 lg:col-span-2">
-                    <CardHeader>
-                        <CardTitle>ユーザーの反応 (アクション)</CardTitle>
-                        <CardDescription>
-                            プロフィールを見た後の行動内訳
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="h-[250px] w-full">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={data.actionsData} layout="vertical" margin={{ left: 20 }}>
-                                    <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
-                                    <XAxis type="number" fontSize={12} tickLine={false} axisLine={false} />
-                                    <YAxis dataKey="name" type="category" fontSize={12} tickLine={false} axisLine={false} width={100} />
-                                    <Tooltip
-                                        cursor={{ fill: 'transparent' }}
-                                        contentStyle={{ backgroundColor: 'white', borderRadius: '8px', border: '1px solid #e2e8f0' }}
-                                    />
-                                    <Bar dataKey="value" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={32} />
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </div>
-                    </CardContent>
-                </Card>
-                {/* 検索クエリランキング */}
-                <Card className="col-span-1 lg:col-span-2">
-                    <CardHeader>
-                        <CardTitle>検索クエリランキング (上位キーワード)</CardTitle>
-                        <CardDescription>
-                            どんなキーワードでお店が検索されているか
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        {!data.topKeywords || data.topKeywords.length === 0 ? (
-                            <div className="text-center py-8 text-muted-foreground text-sm">
-                                <p>キーワードデータがありません</p>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* 表示回数推移グラフ */}
+                    <Card className="col-span-1 lg:col-span-2">
+                        <CardHeader>
+                            <CardTitle>検索・マップ表示回数の推移</CardTitle>
+                            <CardDescription>
+                                お客様がGoogleでお店を見つけた回数
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="h-[300px] w-full">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <LineChart data={data.viewsData}>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                        <XAxis dataKey="date" fontSize={12} tickLine={false} axisLine={false} />
+                                        <YAxis fontSize={12} tickLine={false} axisLine={false} />
+                                        <Tooltip
+                                            contentStyle={{ backgroundColor: 'white', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                        />
+                                        <Line type="monotone" dataKey="map" name="Googleマップ" stroke="#2563eb" strokeWidth={2} activeDot={{ r: 4 }} />
+                                        <Line type="monotone" dataKey="search" name="Google検索" stroke="#16a34a" strokeWidth={2} activeDot={{ r: 4 }} />
+                                    </LineChart>
+                                </ResponsiveContainer>
                             </div>
-                        ) : (
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-sm text-left">
-                                    <thead className="text-muted-foreground border-b">
-                                        <tr>
-                                            <th className="py-2 px-4 font-medium">順位</th>
-                                            <th className="py-2 px-4 font-medium">キーワード</th>
-                                            <th className="py-2 px-4 font-medium text-right">表示回数</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {data.topKeywords.map((keyword, index) => (
-                                            <tr key={index} className="border-b last:border-0 hover:bg-muted/50 transition-colors">
-                                                <td className="py-3 px-4 w-16 text-muted-foreground">{index + 1}</td>
-                                                <td className="py-3 px-4 font-medium">{keyword.term}</td>
-                                                <td className="py-3 px-4 text-right">{keyword.value.toLocaleString()}</td>
+                        </CardContent>
+                    </Card>
+
+                    {/* アクション内訳グラフ */}
+                    <Card className="col-span-1 lg:col-span-2">
+                        <CardHeader>
+                            <CardTitle>ユーザーの反応 (アクション)</CardTitle>
+                            <CardDescription>
+                                プロフィールを見た後の行動内訳
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="h-[250px] w-full">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart data={data.actionsData} layout="vertical" margin={{ left: 20 }}>
+                                        <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
+                                        <XAxis type="number" fontSize={12} tickLine={false} axisLine={false} />
+                                        <YAxis dataKey="name" type="category" fontSize={12} tickLine={false} axisLine={false} width={100} />
+                                        <Tooltip
+                                            cursor={{ fill: 'transparent' }}
+                                            contentStyle={{ backgroundColor: 'white', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+                                        />
+                                        <Bar dataKey="value" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={32} />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </CardContent>
+                    </Card>
+                    {/* 検索クエリランキング */}
+                    <Card className="col-span-1 lg:col-span-2">
+                        <CardHeader>
+                            <CardTitle>検索クエリランキング (上位キーワード)</CardTitle>
+                            <CardDescription>
+                                どんなキーワードでお店が検索されているか
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            {!data.topKeywords || data.topKeywords.length === 0 ? (
+                                <div className="text-center py-8 text-muted-foreground text-sm">
+                                    <p>キーワードデータがありません</p>
+                                </div>
+                            ) : (
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-sm text-left">
+                                        <thead className="text-muted-foreground border-b">
+                                            <tr>
+                                                <th className="py-2 px-4 font-medium">順位</th>
+                                                <th className="py-2 px-4 font-medium">キーワード</th>
+                                                <th className="py-2 px-4 font-medium text-right">表示回数</th>
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
+                                        </thead>
+                                        <tbody>
+                                            {data.topKeywords.map((keyword, index) => (
+                                                <tr key={index} className="border-b last:border-0 hover:bg-muted/50 transition-colors">
+                                                    <td className="py-3 px-4 w-16 text-muted-foreground">{index + 1}</td>
+                                                    <td className="py-3 px-4 font-medium">{keyword.term}</td>
+                                                    <td className="py-3 px-4 text-right">{keyword.value.toLocaleString()}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
-        </div>
+        </div >
     )
 }

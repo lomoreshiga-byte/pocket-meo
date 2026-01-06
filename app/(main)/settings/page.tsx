@@ -44,14 +44,16 @@ export default function SettingsPage() {
     }
 
     return (
-        <div className="min-h-screen bg-background">
+        <div className="min-h-screen bg-white">
             {/* ヘッダー */}
-            <div className="bg-primary text-primary-foreground pt-safe">
-                <div className="p-4">
-                    <h1 className="text-2xl font-bold">設定</h1>
-                    <p className="text-primary-foreground/80 text-sm mt-1">
-                        店舗情報と連携設定
-                    </p>
+            <div className="pt-safe px-6 pb-6 border-b border-border/50 sticky top-0 z-10 bg-white" style={{ backgroundColor: '#ffffff' }}>
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-2xl font-bold text-gray-900">設定</h1>
+                        <p className="text-muted-foreground text-sm mt-1">
+                            店舗情報と連携設定
+                        </p>
+                    </div>
                 </div>
             </div>
 
