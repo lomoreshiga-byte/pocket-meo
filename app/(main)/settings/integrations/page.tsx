@@ -105,7 +105,7 @@ export default function IntegrationsPage() {
                 provider: 'facebook',
                 options: {
                     scopes: 'instagram_basic,pages_show_list',
-                    redirectTo: `${window.location.origin}/auth/callback?provider=instagram` // Send to server to exchange code
+                    redirectTo: `${window.location.origin}/settings/integrations` // Redirect back here to capture token content
                 }
             })
 
@@ -218,6 +218,13 @@ export default function IntegrationsPage() {
                             </div>
                         </CardHeader>
                         <CardContent>
+                            {/* Status Feedback */}
+                            {statusMessage && (
+                                <div className="bg-blue-50 text-blue-700 p-4 rounded-lg text-sm font-bold animate-pulse">
+                                    {statusMessage}
+                                </div>
+                            )}
+
                             <div className="space-y-4">
                                 <p className="text-sm text-muted-foreground">
                                     Instagramの投稿を取得したり、予約投稿を行うために連携が必要です。
