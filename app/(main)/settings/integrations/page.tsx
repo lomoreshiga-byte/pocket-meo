@@ -17,6 +17,57 @@ export default function IntegrationsPage() {
 
     useEffect(() => {
         checkConnection()
+
+        // Check for provider_token in URL (hash or query)
+        // Usually Supabase returns it in hash for implicit flow or query for others.
+        // We check both.
+        const handleTokenCapture = async () => {
+            const hashParams = new URLSearchParams(window.location.hash.substring(1))
+            const queryParams = new URLSearchParams(window.location.search)
+
+            const providerToken = hashParams.get('provider_token') || queryParams.get('provider_token')
+            const refreshToken = hashParams.get('refresh_token') || queryParams.get('refresh_token')
+
+            if (providerToken) {
+                setLinking(true)
+                try {
+                    const { data: { user } } = await supabase.auth.getUser()
+                    if (!user) throw new Error('No user found')
+
+                    // Find Facebook identity to get account ID
+                    const fbIdentity = user.identities?.find(i => i.provider === 'facebook')
+
+                    // Upsert to integrations table
+                    const { error } = await supabase.from('integrations').upsert({
+                        user_id: user.id,
+                        provider: 'instagram', // We map facebook identity to instagram provider
+                        provider_account_id: fbIdentity?.id || 'unknown',
+                        access_token: providerToken,
+                        refresh_token: refreshToken, // Might be SB refresh token or provider? Usually provider_token coming back is access token.
+                        // Note: Supabase might return provider_refresh_token separately if available. 
+                        // In the user's paste: 'refresh_token=2go3...' this looks like SB refresh token.
+                        // But 'provider_token' is definitely the Instagram access token.
+                        updated_at: new Date().toISOString()
+                    }, { onConflict: 'user_id, provider' })
+
+                    if (error) throw error
+
+                    // Success!
+                    setInstagramLinked(true)
+                    alert('Instagram連携が完了しました！')
+
+                    // Clean URL
+                    router.replace('/settings/integrations')
+                } catch (err: any) {
+                    console.error('Token save error:', err)
+                    setError('トークンの保存に失敗しました: ' + err.message)
+                } finally {
+                    setLinking(false)
+                }
+            }
+        }
+
+        handleTokenCapture()
     }, [])
 
     const checkConnection = async () => {
@@ -27,7 +78,15 @@ export default function IntegrationsPage() {
                 const fbIdentity = session.user.identities.find(
                     (identity) => identity.provider === 'facebook'
                 )
-                setInstagramLinked(!!fbIdentity)
+                // Also check if we have the token in DB (double check)
+                const { data: integration } = await supabase
+                    .from('integrations')
+                    .select('id')
+                    .eq('user_id', session.user.id)
+                    .eq('provider', 'instagram')
+                    .single()
+
+                setInstagramLinked(!!fbIdentity && !!integration)
             }
         } catch (err) {
             console.error('Error checking connection:', err)
@@ -46,14 +105,11 @@ export default function IntegrationsPage() {
                 provider: 'facebook',
                 options: {
                     scopes: 'instagram_basic,pages_show_list',
-                    redirectTo: `${window.location.origin}/auth/callback?provider=instagram` // 明示的にプロバイダーを指定
+                    redirectTo: `${window.location.origin}/settings/integrations` // Redirect back here to capture token
                 }
             })
 
             if (error) throw error
-
-            // リダイレクトされるため、ここには到達しない可能性があるが、
-            // 成功した場合は自動的にリロードされる
         } catch (err: any) {
             console.error('Instagram connection error:', err)
             setError(err.message || '連携に失敗しました')
