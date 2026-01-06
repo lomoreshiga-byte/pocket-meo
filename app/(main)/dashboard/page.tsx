@@ -56,7 +56,7 @@ export default function DashboardPage() {
             </div>
 
             {/* アクションカード */}
-            <div className="px-4 space-y-3 pb-6 pt-6 md:p-0 md:grid md:grid-cols-3 md:gap-6 md:space-y-0">
+            <div className="px-4 space-y-3 pb-6 pt-6 md:pt-8 md:px-0 md:pb-0 md:grid md:grid-cols-3 md:gap-6 md:space-y-0">
                 {/* 未返信クチコミ */}
                 <ActionCard
                     title="未返信のクチコミ"
