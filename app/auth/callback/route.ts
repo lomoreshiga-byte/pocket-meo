@@ -7,9 +7,11 @@ export const dynamic = 'force-dynamic'
 export async function GET(request: Request) {
     const requestUrl = new URL(request.url)
     const code = requestUrl.searchParams.get('code')
+    const next = requestUrl.searchParams.get('next') || '/dashboard'
+    const providerParam = requestUrl.searchParams.get('provider')
 
-    // Default redirect
-    let redirectTo = '/dashboard'
+    // We will build the redirect URL based on 'next'
+    const targetUrl = new URL(next, requestUrl.origin)
 
     if (code) {
         const cookieStore = cookies()
@@ -35,40 +37,44 @@ export async function GET(request: Request) {
         try {
             const { data: { session }, error } = await supabase.auth.exchangeCodeForSession(code)
 
-            if (error) throw error
+            if (error) {
+                targetUrl.searchParams.set('error', error.message)
+                targetUrl.searchParams.set('debug_step', 'exchange_failed')
+            }
 
             if (session) {
-                // Check if this is an Instagram integration flow
-                // We check the requested provider request param or the user metadata
-                // Note: provider param might be lost in some redirect chains, but let's check.
-                const urlParams = new URLSearchParams(requestUrl.search)
-                const isInstagram = urlParams.get('provider') === 'instagram'
-                    || requestUrl.searchParams.get('provider') === 'instagram'
+                // Debug info
+                targetUrl.searchParams.set('debug_session', 'yes')
+                targetUrl.searchParams.set('debug_has_token', session.provider_token ? 'yes' : 'no')
 
-                // If we have a provider token, this is likely a fresh link/login
+                // If we have a provider token, pass it to the client
                 if (session.provider_token) {
-                    // Decide where to go
-                    if (isInstagram) {
-                        // Pass the token to the client settings page to save it
-                        const params = new URLSearchParams()
-                        params.set('provider_token', session.provider_token)
+                    // Check if this is likely Instagram
+                    if (providerParam === 'instagram' || session.user?.app_metadata?.provider === 'facebook') {
+                        targetUrl.searchParams.set('provider_token', session.provider_token)
                         if (session.provider_refresh_token) {
-                            params.set('refresh_token', session.provider_refresh_token)
+                            targetUrl.searchParams.set('refresh_token', session.provider_refresh_token)
                         }
-                        params.set('status', 'captured_by_server')
-
-                        redirectTo = `/settings/integrations?${params.toString()}`
+                        targetUrl.searchParams.set('status_message', 'Token relayed from server')
                     }
+                } else {
+                    targetUrl.searchParams.set('status_message', 'No provider token in session')
                 }
+            } else {
+                targetUrl.searchParams.set('debug_session', 'no')
             }
-        } catch (error) {
+
+        } catch (error: any) {
             console.error('Auth Callback Error:', error)
-            // Still redirect to dashboard or settings to handle error
-            redirectTo = '/dashboard?error=auth_callback_failed'
+            targetUrl.searchParams.set('error', 'server_error')
+            targetUrl.searchParams.set('debug_step', 'catch_block')
+            targetUrl.searchParams.set('debug_msg', error.message)
         }
+    } else {
+        targetUrl.searchParams.set('error', 'no_code')
     }
 
-    const response = NextResponse.redirect(requestUrl.origin + redirectTo)
+    const response = NextResponse.redirect(targetUrl.toString())
 
     // Manual Cookie Copying to Response to ensure persistence
     const cookieStore = cookies()

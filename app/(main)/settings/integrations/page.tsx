@@ -106,7 +106,7 @@ export default function IntegrationsPage() {
                 provider: 'facebook',
                 options: {
                     scopes: 'instagram_basic,pages_show_list',
-                    redirectTo: `${window.location.origin}/settings/integrations` // Redirect back here to capture token content
+                    redirectTo: `${window.location.origin}/auth/callback?next=/settings/integrations&provider=instagram`
                 }
             })
 
