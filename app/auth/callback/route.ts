@@ -30,9 +30,10 @@ export async function GET(request: Request) {
 
         if (session?.user && session.provider_token) {
             try {
-                // Determine provider from user app_metadata or identity
-                const identity = session.user.identities?.find((id: { provider: string }) => id.provider === session.user.app_metadata.provider)
-                const provider = identity?.provider || 'google' // default fallback
+                // Determine provider: priority to URL param (for linking), then metadata (for login)
+                const urlProvider = requestUrl.searchParams.get('provider')
+                const appMetadataProvider = session.user.app_metadata.provider
+                const provider = urlProvider || appMetadataProvider || 'google'
 
                 // Upsert into integrations table
                 const { error: dbError } = await supabase

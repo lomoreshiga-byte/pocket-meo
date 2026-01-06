@@ -46,7 +46,8 @@ export default function IntegrationsPage() {
                 provider: 'facebook',
                 options: {
                     scopes: 'instagram_basic,pages_show_list',
-                    redirectTo: `${window.location.origin}/auth/callback` // Callbackを経由してトークンを保存する
+                    scopes: 'instagram_basic,pages_show_list',
+                    redirectTo: `${window.location.origin}/auth/callback?provider=instagram` // 明示的にプロバイダーを指定
                 }
             })
 
