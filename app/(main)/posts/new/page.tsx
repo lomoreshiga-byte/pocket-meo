@@ -128,7 +128,7 @@ export default function NewPostPage() {
                 </div>
             </div>
 
-            <div className="p-4 space-y-4">
+            <div className="p-4 space-y-4 md:max-w-xl md:mx-auto">
                 {/* プラットフォーム選択 */}
                 <Card className="p-4">
                     <p className="text-sm font-medium mb-3">投稿先</p>
