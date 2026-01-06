@@ -50,18 +50,25 @@ export default function PostsPage() {
         setError(null)
         try {
             const { data: { session } } = await supabase.auth.getSession()
-            const token = session?.provider_token
+            if (!session) return
+
+            // Fetch Instagram token from integrations table
+            const { data: integration } = await supabase
+                .from('integrations')
+                .select('access_token')
+                .eq('user_id', session.user.id)
+                .eq('provider', 'instagram')
+                .single()
+
+            const token = integration?.access_token
 
             if (token) {
                 const media = await fetchInstagramMedia(token)
                 const formattedPosts = media.map(m => convertIgMediaToPost(m))
                 setIgPosts(formattedPosts)
             } else {
-                console.log('No Facebook provider token found in session')
-                const fbIdentity = session?.user?.identities?.find(i => i.provider === 'facebook')
-                if (fbIdentity) {
-                    setError('アクセストークンが取得できませんでした。一度ログアウトして、再度ログインをお試しください。')
-                }
+                console.log('No Instagram integration found')
+                // No error needed if not linked, just don't show posts
             }
         } catch (err: any) {
             console.error('Failed to load IG posts:', err)
@@ -73,7 +80,10 @@ export default function PostsPage() {
             } else {
                 errorMsg = String(err)
             }
-            setError(`${errorMsg} (Time: ${new Date().toLocaleTimeString()})`)
+            // Only show error text if it's not a "No connected account" expected error
+            if (!errorMsg.includes('No Instagram integration')) {
+                setError(`${errorMsg}`)
+            }
         } finally {
             setLoading(false)
         }
@@ -85,12 +95,20 @@ export default function PostsPage() {
         setSyncingId(post.id)
         try {
             const { data: { session } } = await supabase.auth.getSession()
-            const token = session?.provider_token
+            if (!session) throw new Error('認証されていません')
 
-            if (!token) throw new Error('認証トークンが見つかりません')
+            // Fetch Google token from integrations table
+            const { data: integration } = await supabase
+                .from('integrations')
+                .select('access_token')
+                .eq('user_id', session.user.id)
+                .eq('provider', 'google')
+                .single()
 
-            // Note: 現在のトークンがGoogleのものか確認できないため、とりあえずAPIを叩く
-            // Googleログインしていない場合はここでGoogle APIのエラーが出る
+            // Fallback to session token only if it is likely Google (which is default login now)
+            const token = integration?.access_token || session.provider_token
+
+            if (!token) throw new Error('Google連携トークンが見つかりません')
 
             // 1. アカウント取得
             const accounts = await fetchGBPAccounts(token)
