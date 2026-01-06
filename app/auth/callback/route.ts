@@ -1,4 +1,4 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { createServerClient, type CookieOptions } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
@@ -7,7 +7,25 @@ export async function GET(request: Request) {
     const code = requestUrl.searchParams.get('code')
 
     if (code) {
-        const supabase = createRouteHandlerClient({ cookies })
+        const cookieStore = cookies()
+        const supabase = createServerClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            {
+                cookies: {
+                    get(name: string) {
+                        return cookieStore.get(name)?.value
+                    },
+                    set(name: string, value: string, options: CookieOptions) {
+                        cookieStore.set({ name, value, ...options })
+                    },
+                    remove(name: string, options: CookieOptions) {
+                        cookieStore.set({ name, value: '', ...options })
+                    },
+                },
+            }
+        )
+
         const { data: { session } } = await supabase.auth.exchangeCodeForSession(code)
 
         if (session?.user && session.provider_token) {
@@ -17,16 +35,15 @@ export async function GET(request: Request) {
                 const provider = identity?.provider || 'google' // default fallback
 
                 // Upsert into integrations table
-                // Note: This requires the table to exist (run migration!)
                 const { error: dbError } = await supabase
                     .from('integrations')
                     .upsert({
                         user_id: session.user.id,
-                        provider: provider === 'facebook' ? 'instagram' : provider, // Map facebook to instagram for this app context if needed
+                        provider: provider === 'facebook' ? 'instagram' : provider,
                         provider_account_id: identity?.id,
                         access_token: session.provider_token,
                         refresh_token: session.provider_refresh_token,
-                        expires_at: session.expires_at, // This is usually session expiry, not token expiry, but acceptable proxy
+                        expires_at: session.expires_at,
                         updated_at: new Date().toISOString()
                     }, { onConflict: 'user_id, provider' })
 
