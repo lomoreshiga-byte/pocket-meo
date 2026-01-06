@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Card } from '@/components/ui/card'
 import { X, Image as ImageIcon, Send, Calendar, Loader2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { GoogleBusinessProfileLogo, InstagramLogo } from '@/components/icons'
 
 export default function NewPostPage() {
     const router = useRouter()
@@ -136,26 +137,29 @@ export default function NewPostPage() {
                         <Button
                             variant={platform === 'gbp' ? 'default' : 'outline'}
                             onClick={() => setPlatform('gbp')}
-                            className="h-auto py-3 flex-col gap-1"
+                            className="h-auto py-3 flex-col gap-2"
                         >
-                            <span className="text-lg">🏢</span>
-                            <span className="text-xs">GBP</span>
+                            <GoogleBusinessProfileLogo className="w-8 h-8" />
+                            <span className="text-xs font-medium">GBP</span>
                         </Button>
                         <Button
                             variant={platform === 'instagram' ? 'default' : 'outline'}
                             onClick={() => setPlatform('instagram')}
-                            className="h-auto py-3 flex-col gap-1"
+                            className="h-auto py-3 flex-col gap-2"
                         >
-                            <span className="text-lg">📸</span>
-                            <span className="text-xs">Instagram</span>
+                            <InstagramLogo className="w-8 h-8" />
+                            <span className="text-xs font-medium">Instagram</span>
                         </Button>
                         <Button
                             variant={platform === 'both' ? 'default' : 'outline'}
                             onClick={() => setPlatform('both')}
-                            className="h-auto py-3 flex-col gap-1"
+                            className="h-auto py-3 flex-col gap-2"
                         >
-                            <span className="text-lg">🔗</span>
-                            <span className="text-xs">両方</span>
+                            <div className="flex -space-x-3 items-center justify-center">
+                                <GoogleBusinessProfileLogo className="w-6 h-6 border-2 border-background rounded-full bg-white relative z-10" />
+                                <InstagramLogo className="w-6 h-6 border-2 border-background rounded-full bg-white text-pink-500" />
+                            </div>
+                            <span className="text-xs font-medium">両方</span>
                         </Button>
                     </div>
                 </Card>
