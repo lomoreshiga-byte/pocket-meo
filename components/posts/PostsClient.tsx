@@ -154,10 +154,10 @@ export default function PostsClient({
                 )}
 
                 {/* Temporary Debug Info */}
-                <div className="p-4 bg-gray-100 rounded text-xs font-mono break-all mt-4 hidden">
+                <div className="p-4 bg-gray-100 rounded text-xs font-mono break-all mt-4">
                     {/* Hidden by default now, can enable for debugging */}
                     <p className="font-bold">Debug Info:</p>
-                    <p>User ID: {userId}</p>
+                    <p>User ID: {userId || 'NULL'}</p>
                     <p>Google Token: {googleToken ? 'YES' : 'NO'}</p>
                     <p>IG Token: {instagramToken ? 'YES' : 'NO'}</p>
                     <p>IG Posts: {igPosts.length}</p>
