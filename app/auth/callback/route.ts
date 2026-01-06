@@ -71,13 +71,19 @@ export async function GET(request: Request) {
 
                 if (dbError) {
                     console.error('Failed to save integration token:', dbError)
+                    return NextResponse.redirect(`${requestUrl.origin}/settings/integrations?error=${encodeURIComponent(dbError.message)}&details=${encodeURIComponent(JSON.stringify(dbError))}`)
                 }
-            } catch (err) {
+            } catch (err: any) {
                 console.error('Error saving integration token:', err)
+                return NextResponse.redirect(`${requestUrl.origin}/settings/integrations?error=UnexpectedError&details=${encodeURIComponent(err.message)}`)
             }
         }
     }
 
     // URL to redirect to after sign in process completes
-    return NextResponse.redirect(requestUrl.origin + '/dashboard')
+    const redirectTo = requestUrl.searchParams.get('provider') === 'instagram'
+        ? '/settings/integrations'
+        : '/dashboard'
+
+    return NextResponse.redirect(requestUrl.origin + redirectTo)
 }
