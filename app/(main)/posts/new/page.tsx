@@ -1,24 +1,61 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Card } from '@/components/ui/card'
-import { X, Image as ImageIcon, Send, Calendar } from 'lucide-react'
+import { X, Image as ImageIcon, Send, Calendar, Loader2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
 export default function NewPostPage() {
     const router = useRouter()
+    const fileInputRef = useRef<HTMLInputElement>(null)
     const [content, setContent] = useState('')
     const [platform, setPlatform] = useState<'gbp' | 'instagram' | 'both'>('both')
-    const [hasImage, setHasImage] = useState(false)
+    const [imageUrl, setImageUrl] = useState<string | null>(null)
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const [isUploading, setIsUploading] = useState(false)
 
     const handleImageUpload = () => {
-        // TODO: 画像アップロード実装（Storageが必要）
-        // 現状はUI動作のみ
-        setHasImage(true)
+        fileInputRef.current?.click()
+    }
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+
+        if (file.size > 5 * 1024 * 1024) {
+            alert('画像サイズは5MB以下にしてください')
+            return
+        }
+
+        setIsUploading(true)
+        try {
+            const fileName = `${Date.now()}-${file.name}`
+            const { data, error } = await supabase.storage
+                .from('posts')
+                .upload(fileName, file)
+
+            if (error) {
+                throw error
+            }
+
+            const { data: { publicUrl } } = supabase.storage
+                .from('posts')
+                .getPublicUrl(fileName)
+
+            setImageUrl(publicUrl)
+        } catch (error: any) {
+            console.error('Upload error:', error)
+            alert('画像のアップロードに失敗しました')
+        } finally {
+            setIsUploading(false)
+            // Reset input
+            if (fileInputRef.current) {
+                fileInputRef.current.value = ''
+            }
+        }
     }
 
     const savePost = async (status: 'published' | 'scheduled') => {
@@ -29,9 +66,6 @@ export default function NewPostPage() {
                 alert('ログインが必要です')
                 return
             }
-
-            // 画像URLは現状null
-            const imageUrl = hasImage ? null : null
 
             const { error } = await supabase
                 .from('posts')
@@ -128,15 +162,22 @@ export default function NewPostPage() {
 
                 {/* 画像アップロード */}
                 <Card className="p-4">
-                    {hasImage ? (
-                        <div className="relative aspect-square bg-muted rounded-lg flex items-center justify-center">
-                            <ImageIcon className="w-16 h-16 text-muted-foreground" />
-                            <p className="absolute bottom-2 text-xs text-muted-foreground">(画像保存は未実装です)</p>
+                    <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        ref={fileInputRef}
+                        onChange={handleFileChange}
+                    />
+
+                    {imageUrl ? (
+                        <div className="relative aspect-square bg-muted rounded-lg overflow-hidden group">
+                            <img src={imageUrl} alt="Preview" className="w-full h-full object-cover" />
                             <Button
                                 variant="destructive"
                                 size="icon"
-                                className="absolute top-2 right-2"
-                                onClick={() => setHasImage(false)}
+                                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={() => setImageUrl(null)}
                             >
                                 <X className="w-4 h-4" />
                             </Button>
@@ -144,12 +185,22 @@ export default function NewPostPage() {
                     ) : (
                         <button
                             onClick={handleImageUpload}
-                            className="w-full aspect-square border-2 border-dashed border-muted-foreground/25 rounded-lg flex flex-col items-center justify-center gap-2 hover:border-primary hover:bg-primary/5 transition-colors"
+                            disabled={isUploading}
+                            className="w-full aspect-square border-2 border-dashed border-muted-foreground/25 rounded-lg flex flex-col items-center justify-center gap-2 hover:border-primary hover:bg-primary/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            <ImageIcon className="w-12 h-12 text-muted-foreground" />
-                            <p className="text-sm text-muted-foreground">
-                                タップして画像を追加
-                            </p>
+                            {isUploading ? (
+                                <>
+                                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                                    <p className="text-sm text-muted-foreground">アップロード中...</p>
+                                </>
+                            ) : (
+                                <>
+                                    <ImageIcon className="w-12 h-12 text-muted-foreground" />
+                                    <p className="text-sm text-muted-foreground">
+                                        タップして画像を追加
+                                    </p>
+                                </>
+                            )}
                         </button>
                     )}
                 </Card>
@@ -179,7 +230,7 @@ export default function NewPostPage() {
                 <div className="space-y-2 pb-4">
                     <Button
                         onClick={handlePublish}
-                        disabled={!content.trim() || isSubmitting}
+                        disabled={!content.trim() || isSubmitting || isUploading}
                         className="w-full h-12"
                         size="lg"
                     >
@@ -195,7 +246,7 @@ export default function NewPostPage() {
 
                     <Button
                         onClick={handleSchedule}
-                        disabled={!content.trim() || isSubmitting}
+                        disabled={!content.trim() || isSubmitting || isUploading}
                         variant="outline"
                         className="w-full h-12"
                         size="lg"
