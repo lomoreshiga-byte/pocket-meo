@@ -2,12 +2,25 @@ import { createServerClient, type CookieOptions } from '@supabase/auth-helpers-n
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: Request) {
     const requestUrl = new URL(request.url)
     const code = requestUrl.searchParams.get('code')
 
+    // URL to redirect to after sign in process completes
+    // Determine this early, but construct final response later
+    const redirectToPath = requestUrl.searchParams.get('provider') === 'instagram'
+        ? '/settings/integrations?status=success'
+        : '/dashboard'
+
+    const response = NextResponse.redirect(requestUrl.origin + redirectToPath)
+
     if (code) {
         const cookieStore = cookies()
+
+        // Track cookie changes to apply to the response manually
+        // because cookies().set() sometimes doesn't propagate to NextResponse.redirect in Route Handlers
         const supabase = createServerClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
             process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -18,9 +31,13 @@ export async function GET(request: Request) {
                     },
                     set(name: string, value: string, options: CookieOptions) {
                         cookieStore.set({ name, value, ...options })
+                        // ALSO set on the response object
+                        response.cookies.set({ name, value, ...options })
                     },
                     remove(name: string, options: CookieOptions) {
                         cookieStore.set({ name, value: '', ...options })
+                        // ALSO set on the response object
+                        response.cookies.set({ name, value: '', ...options })
                     },
                 },
             }
@@ -97,10 +114,5 @@ export async function GET(request: Request) {
         }
     }
 
-    // URL to redirect to after sign in process completes
-    const redirectTo = requestUrl.searchParams.get('provider') === 'instagram'
-        ? '/settings/integrations?status=success'
-        : '/dashboard'
-
-    return NextResponse.redirect(requestUrl.origin + redirectTo)
+    return response
 }
