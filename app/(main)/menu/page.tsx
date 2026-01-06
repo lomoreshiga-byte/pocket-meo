@@ -9,7 +9,8 @@ import {
     ChevronRight,
     HelpCircle,
     LogOut,
-    User
+    User,
+    LineChart
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { signOut } from '@/lib/supabase'
@@ -54,6 +55,12 @@ export default function MobileMenuPage() {
                             icon={<ClipboardList className="w-5 h-5 text-green-500" />}
                             label="アンケート"
                             description="QRコード表示・口コミ生成"
+                        />
+                        <MenuItem
+                            href="/analytics"
+                            icon={<LineChart className="w-5 h-5 text-purple-500" />}
+                            label="パフォーマンス分析"
+                            description="過去30日間のインサイト情報"
                         />
                     </div>
                 </section>
