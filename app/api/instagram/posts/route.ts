@@ -1,86 +1,87 @@
+import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
-import { createServerClient, type CookieOptions } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { fetchInstagramMedia } from '@/lib/instagram-api'
+
+export const dynamic = 'force-dynamic'
 
 export async function GET(request: Request) {
-    const cookieStore = cookies()
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-            cookies: {
-                get(name: string) {
-                    return cookieStore.get(name)?.value
-                },
-                set(name: string, value: string, options: CookieOptions) {
-                    cookieStore.set({ name, value, ...options })
-                },
-                remove(name: string, options: CookieOptions) {
-                    cookieStore.set({ name, value: '', ...options })
-                },
-            },
-        }
-    )
-    const { data: { session } } = await supabase.auth.getSession()
-
-    if (!session) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    // Fetch token from 'integrations' table to ensure we get the correct provider's token
-    const { data: integration } = await supabase
-        .from('integrations')
-        .select('access_token')
-        .eq('user_id', session.user.id)
-        .eq('provider', 'instagram') // Saved as 'instagram' in callback
-        .single()
-
-    const providerToken = integration?.access_token
-
-    if (!providerToken) {
-        // Fallback mock data
-        return NextResponse.json({
-            data: [
-                {
-                    id: 'ig1',
-                    media_type: 'IMAGE',
-                    media_url: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c',
-                    caption: '今日のランチは特製ラーメン！',
-                    timestamp: new Date().toISOString()
-                },
-                {
-                    id: 'ig2',
-                    media_type: 'IMAGE',
-                    media_url: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38',
-                    caption: '新メニューの試作中です。',
-                    timestamp: new Date(Date.now() - 86400000).toISOString()
-                }
-            ]
-        })
-    }
-
     try {
-        // Facebook Graph API to get Instagram Media
-        // Need Page ID -> IG User ID -> Media
-        const response = await fetch(`https://graph.facebook.com/v18.0/me/accounts?access_token=${providerToken}`)
-        const data = await response.json()
+        // 1. Get Auth Token from Header
+        const authHeader = request.headers.get('Authorization')
+        if (!authHeader) {
+            return NextResponse.json({ error: 'No authorization header' }, { status: 401 })
+        }
+        const token = authHeader.replace('Bearer ', '')
 
-        // Complex logic omitted: Traverse to find IG Business ID and then fetch media
-        // For now, returning mock to ensure UI works
-        return NextResponse.json({
-            data: [
-                {
-                    id: 'ig1',
-                    media_type: 'IMAGE',
-                    media_url: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1',
-                    caption: 'APIからの取得データ（デモ）',
-                    timestamp: new Date().toISOString()
-                }
-            ]
-        })
+        // 2. Validate User with Standard Client
+        const supabase = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        )
+        const { data: { user }, error: authError } = await supabase.auth.getUser(token)
 
-    } catch (error) {
-        console.error('Instagram API Error:', error)
-        return NextResponse.json({ error: 'Failed to fetch posts' }, { status: 500 })
+        if (authError || !user) {
+            console.error('API Auth Error:', authError)
+            return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
+        }
+
+        // 3. Use Admin Client to fetch Integration Token (Bypass RLS)
+        const supabaseAdmin = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!
+        )
+
+        // Fetch both Instagram and Google tokens to return to client (for syncing)
+        const { data: integrations, error: dbError } = await supabaseAdmin
+            .from('integrations')
+            .select('provider, access_token')
+            .eq('user_id', user.id)
+            .in('provider', ['instagram', 'google'])
+
+        if (dbError) {
+            console.error('DB Error:', dbError)
+            return NextResponse.json({ error: 'Database error' }, { status: 500 })
+        }
+
+        const igIntegration = integrations?.find(i => i.provider === 'instagram')
+        const googleIntegration = integrations?.find(i => i.provider === 'google')
+        const googleToken = googleIntegration?.access_token || null
+
+        if (!igIntegration?.access_token) {
+            return NextResponse.json({
+                posts: [],
+                googleToken,
+                instagramToken: null
+            })
+        }
+
+        // 4. Fetch Instagram Posts
+        try {
+            const media = await fetchInstagramMedia(igIntegration.access_token)
+
+            const posts = media.map(m => ({
+                id: m.id,
+                userId: user.id,
+                content: m.caption || '',
+                imageUrl: m.media_url,
+                platform: 'instagram',
+                status: 'published',
+                publishedAt: m.timestamp,
+                createdAt: m.timestamp
+            }))
+
+            return NextResponse.json({
+                posts,
+                googleToken,
+                instagramToken: igIntegration.access_token
+            })
+        } catch (apiError: any) {
+            console.error('Instagram API Error:', apiError)
+            return NextResponse.json({ error: 'Instagram API Error: ' + apiError.message, googleToken }, { status: 502 })
+        }
+
+    } catch (e: any) {
+        console.error('Unexpected API Error:', e)
+        return NextResponse.json({ error: e.message }, { status: 500 })
     }
 }

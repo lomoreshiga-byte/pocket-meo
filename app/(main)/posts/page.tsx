@@ -1,89 +1,79 @@
-import { createServerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+'use client'
+
+import { useEffect, useState } from 'react'
+import { supabase } from '@/lib/supabase'
 import PostsClient from '@/components/posts/PostsClient'
 import { Post } from '@/types'
-import { fetchInstagramMedia, InstagramMedia } from '@/lib/instagram-api'
+import { Loader2 } from 'lucide-react'
 
-export const dynamic = 'force-dynamic'
+export default function PostsPage() {
+    const [posts, setPosts] = useState<Post[]>([])
+    const [googleToken, setGoogleToken] = useState<string | null>(null)
+    const [instagramToken, setInstagramToken] = useState<string | null>(null)
+    const [userId, setUserId] = useState<string | null>(null)
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
+    const [debugCookies, setDebugCookies] = useState<string[]>([])
 
-// Helper function to convert Media to Post
-const convertIgMediaToPost = (media: InstagramMedia): Post => {
-    return {
-        id: media.id,
-        userId: 'instagram-user',
-        content: media.caption || '',
-        imageUrl: media.media_url,
-        platform: 'instagram',
-        status: 'published',
-        publishedAt: new Date(media.timestamp),
-        createdAt: new Date(media.timestamp)
-    }
-}
+    useEffect(() => {
+        fetchData()
+    }, [])
 
-export default async function PostsPage() {
-    const cookieStore = cookies()
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-            cookies: {
-                get(name: string) {
-                    return cookieStore.get(name)?.value
-                },
-            },
-        }
-    )
-
-    const { data: { session } } = await supabase.auth.getSession()
-
-    let initialIgPosts: Post[] = []
-    let googleToken: string | null = null
-    let instagramToken: string | null = null
-    let error: string | null = null
-
-    if (session?.user) {
+    const fetchData = async () => {
         try {
-            // Fetch Integrations
-            const { data: integrations, error: dbError } = await supabase
-                .from('integrations')
-                .select('provider, access_token')
-                .eq('user_id', session.user.id)
-                .in('provider', ['google', 'instagram'])
+            setLoading(true)
+            const { data: { session } } = await supabase.auth.getSession()
 
-            if (dbError) {
-                console.error('Integrations fetch error:', dbError)
-                error = '連携情報の取得に失敗しました'
-            } else if (integrations) {
-                const igIntegration = integrations.find(i => i.provider === 'instagram')
-                const googleIntegration = integrations.find(i => i.provider === 'google')
-
-                instagramToken = igIntegration?.access_token || null
-                googleToken = googleIntegration?.access_token || null
-
-                if (instagramToken) {
-                    try {
-                        const media = await fetchInstagramMedia(instagramToken)
-                        initialIgPosts = media.map(m => convertIgMediaToPost(m))
-                    } catch (err: any) {
-                        console.error('IG Media fetch error:', err)
-                        error = 'Instagramの投稿取得に失敗しました: ' + (err.message || String(err))
-                    }
-                }
+            if (!session?.access_token) {
+                // Not logged in or no session
+                setLoading(false)
+                return
             }
+
+            setUserId(session.user.id)
+            setDebugCookies(['Client-Side Fetch', 'Session Found'])
+
+            // Call API with Bearer Token
+            const res = await fetch('/api/instagram/posts', {
+                headers: {
+                    'Authorization': `Bearer ${session.access_token}`
+                }
+            })
+
+            if (!res.ok) {
+                const errData = await res.json()
+                throw new Error(errData.error || 'Failed to fetch posts')
+            }
+
+            const data = await res.json()
+            setPosts(data.posts || [])
+            setGoogleToken(data.googleToken || null)
+            setInstagramToken(data.instagramToken || null)
+
         } catch (err: any) {
-            console.error('Server setup error:', err)
-            error = 'サーバー側での処理中にエラーが発生しました'
+            console.error('Fetch error:', err)
+            setError(err.message)
+        } finally {
+            setLoading(false)
         }
+    }
+
+    if (loading) {
+        return (
+            <div className="flex h-screen w-full items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+        )
     }
 
     return (
         <PostsClient
-            initialIgPosts={initialIgPosts}
+            initialIgPosts={posts}
             googleToken={googleToken}
             instagramToken={instagramToken}
-            userId={session?.user?.id || null}
+            userId={userId}
             error={error}
-            debugCookies={cookieStore.getAll().map(c => c.name)}
+            debugCookies={debugCookies}
         />
     )
 }
