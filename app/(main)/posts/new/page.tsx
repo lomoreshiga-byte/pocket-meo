@@ -113,7 +113,7 @@ export default function NewPostPage() {
     return (
         <div className="min-h-screen bg-background">
             {/* ヘッダー */}
-            <div className="bg-primary text-primary-foreground pt-safe sticky top-0 z-10">
+            <div className="bg-primary text-primary-foreground pt-safe sticky top-0 z-10 md:static md:max-w-xl md:mx-auto md:rounded-t-xl md:mt-8">
                 <div className="p-4 flex items-center justify-between">
                     <Button
                         variant="ghost"
