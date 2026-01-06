@@ -39,23 +39,25 @@ export async function GET(request: Request) {
                 const searchProvider = provider === 'instagram' ? 'facebook' : provider
                 const identity = session.user.identities?.find((id: { provider: string }) => id.provider === searchProvider)
 
-                // Use Service Role Key to bypass RLS and ensure token is saved
-                // Note: We need to import createClient from supabase-js for this, or just use fetch if we want to avoid extra deps, 
-                // but we likely have supabase-js. We will use a separate client.
-                const { createClient } = require('@supabase/supabase-js')
-                const supabaseAdmin = createClient(
-                    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-                    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, // Fallback only for build, but must exist in env
-                    {
-                        auth: {
-                            autoRefreshToken: false,
-                            persistSession: false
-                        }
-                    }
-                )
+                let upsertClient = supabase
 
-                // Upsert into integrations table using Admin Client
-                const { error: dbError } = await supabaseAdmin
+                // Try to use Service Role Key if available to bypass RLS
+                if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+                    const { createClient } = require('@supabase/supabase-js')
+                    upsertClient = createClient(
+                        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                        process.env.SUPABASE_SERVICE_ROLE_KEY,
+                        {
+                            auth: {
+                                autoRefreshToken: false,
+                                persistSession: false
+                            }
+                        }
+                    )
+                }
+
+                // Upsert into integrations table
+                const { error: dbError } = await upsertClient
                     .from('integrations')
                     .upsert({
                         user_id: session.user.id,
