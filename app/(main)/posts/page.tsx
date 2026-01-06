@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Plus, Image as ImageIcon, Calendar, CheckCircle2, RefreshCw, AlertCircle, Share2, MapPin } from 'lucide-react'
 import { Post } from '@/types'
 import { formatDate } from '@/lib/utils'
-import { supabase } from '@/lib/supabase'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { fetchInstagramMedia, InstagramMedia } from '@/lib/instagram-api'
 import { createGBPPost, fetchGBPAccounts, fetchGBPLocations } from '@/lib/google-api'
 
@@ -35,6 +35,9 @@ const mockGbpPosts: Post[] = [
 ]
 
 export default function PostsPage() {
+    // Use createClientComponentClient to ensure we access the session set by cookies
+    const supabase = createClientComponentClient()
+
     const [localPosts] = useState<Post[]>(mockGbpPosts)
     const [igPosts, setIgPosts] = useState<Post[]>([])
     const [loading, setLoading] = useState(true)
@@ -50,15 +53,23 @@ export default function PostsPage() {
         setError(null)
         try {
             const { data: { session } } = await supabase.auth.getSession()
-            if (!session) return
+            if (!session) {
+                console.log('No session found')
+                return
+            }
 
             // Fetch Instagram token from integrations table
-            const { data: integration } = await supabase
+            const { data: integration, error: dbError } = await supabase
                 .from('integrations')
                 .select('access_token')
                 .eq('user_id', session.user.id)
                 .eq('provider', 'instagram')
                 .single()
+
+            if (dbError && dbError.code !== 'PGRST116') { // PGRST116 is "Row not found" (single() failed)
+                console.error('Database error fetching integration:', dbError)
+                throw new Error('連携情報の取得に失敗しました')
+            }
 
             const token = integration?.access_token
 
@@ -67,7 +78,7 @@ export default function PostsPage() {
                 const formattedPosts = media.map(m => convertIgMediaToPost(m))
                 setIgPosts(formattedPosts)
             } else {
-                console.log('No Instagram integration found')
+                console.log('No Instagram integration found for user:', session.user.id)
                 // No error needed if not linked, just don't show posts
             }
         } catch (err: any) {
