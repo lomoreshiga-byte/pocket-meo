@@ -12,6 +12,7 @@ export default function IntegrationsPage() {
     const [loading, setLoading] = useState(true)
     const [instagramLinked, setInstagramLinked] = useState(false)
     const [linking, setLinking] = useState(false)
+    const [statusMessage, setStatusMessage] = useState<string>('')
     const [error, setError] = useState<string | null>(null)
     const router = useRouter()
 
