@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Plus, Image as ImageIcon, Calendar, CheckCircle2, RefreshCw, AlertCircle, Share2, MapPin } from 'lucide-react'
 import { Post } from '@/types'
 import { formatDate } from '@/lib/utils'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createBrowserClient } from '@supabase/auth-helpers-nextjs'
 import { fetchInstagramMedia, InstagramMedia } from '@/lib/instagram-api'
 import { createGBPPost, fetchGBPAccounts, fetchGBPLocations } from '@/lib/google-api'
 
@@ -35,8 +35,11 @@ const mockGbpPosts: Post[] = [
 ]
 
 export default function PostsPage() {
-    // Use createClientComponentClient to ensure we access the session set by cookies
-    const supabase = createClientComponentClient()
+    // Use createBrowserClient as an alternative since createClientComponentClient is missing
+    const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
 
     const [localPosts] = useState<Post[]>(mockGbpPosts)
     const [igPosts, setIgPosts] = useState<Post[]>([])
@@ -58,6 +61,8 @@ export default function PostsPage() {
                 return
             }
 
+            console.log('Session user ID:', session.user.id)
+
             // Fetch Instagram token from integrations table
             const { data: integration, error: dbError } = await supabase
                 .from('integrations')
@@ -66,12 +71,15 @@ export default function PostsPage() {
                 .eq('provider', 'instagram')
                 .single()
 
-            if (dbError && dbError.code !== 'PGRST116') { // PGRST116 is "Row not found" (single() failed)
+            if (dbError) {
                 console.error('Database error fetching integration:', dbError)
-                throw new Error('連携情報の取得に失敗しました')
+                if (dbError.code !== 'PGRST116') {
+                    throw new Error('連携情報の取得に失敗しました: ' + dbError.message)
+                }
             }
 
             const token = integration?.access_token
+            console.log('Fetched token:', token ? 'Found' : 'Not Found')
 
             if (token) {
                 const media = await fetchInstagramMedia(token)
