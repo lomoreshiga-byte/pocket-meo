@@ -35,6 +35,10 @@ export async function GET(request: Request) {
                 const appMetadataProvider = session.user.app_metadata.provider
                 const provider = urlProvider || appMetadataProvider || 'google'
 
+                // Find matching identity (Note: 'instagram' provider in our app maps to 'facebook' identity in Supabase)
+                const searchProvider = provider === 'instagram' ? 'facebook' : provider
+                const identity = session.user.identities?.find((id: { provider: string }) => id.provider === searchProvider)
+
                 // Upsert into integrations table
                 const { error: dbError } = await supabase
                     .from('integrations')
