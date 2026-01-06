@@ -43,17 +43,16 @@ export default function DashboardPage() {
     const todayPosts = 1
     const isTemporarilyClosed = false
 
+
     return (
-        <div className="min-h-screen bg-gradient-to-b from-background to-muted/20 md:bg-none">
-            {/* ヘッダー */}
-            <div className="bg-primary text-primary-foreground pt-safe -mx-4 -mt-4 p-8 pb-10 mb-[-20px] rounded-b-[2rem] shadow-lg md:bg-transparent md:text-foreground md:shadow-none md:rounded-none md:m-0 md:pt-0 md:mb-8">
-                <div className="md:p-0">
-                    <h1 className="text-2xl font-bold text-center md:text-left">ダッシュボード</h1>
-                </div>
+        <div className="min-h-screen bg-slate-50/50 md:bg-transparent">
+            {/* ヘッダー (Mobile & PC Unified) */}
+            <div className="pt-safe pb-6 px-6 md:pt-0 md:px-0 md:pb-8 relative z-10 w-full border-b border-border/50" style={{ backgroundColor: '#ffffff' }}>
+                <h1 className="text-2xl font-bold text-gray-900">ダッシュボード</h1>
             </div>
 
             {/* アクションカード */}
-            <div className="px-4 mt-4 space-y-3 pb-6 md:bg-transparent md:p-0 md:grid md:grid-cols-3 md:gap-6 md:space-y-0">
+            <div className="px-4 space-y-3 pb-6 md:p-0 md:grid md:grid-cols-3 md:gap-6 md:space-y-0">
                 {/* 未返信クチコミ */}
                 <ActionCard
                     title="未返信のクチコミ"
