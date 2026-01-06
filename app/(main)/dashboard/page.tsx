@@ -47,12 +47,12 @@ export default function DashboardPage() {
     return (
         <div className="min-h-screen bg-slate-50/50 md:bg-transparent">
             {/* ヘッダー (Mobile & PC Unified) */}
-            <div className="pt-safe pb-6 px-6 md:pt-0 md:px-0 md:pb-8 relative z-10 w-full border-b border-border/50" style={{ backgroundColor: '#ffffff' }}>
+            <div className="pt-safe pb-6 px-6 md:pt-0 md:px-0 md:pb-8 sticky top-0 z-10 w-full border-b border-border/50 text-center" style={{ backgroundColor: '#ffffff' }}>
                 <h1 className="text-2xl font-bold text-gray-900">ダッシュボード</h1>
             </div>
 
             {/* アクションカード */}
-            <div className="px-4 space-y-3 pb-6 md:p-0 md:grid md:grid-cols-3 md:gap-6 md:space-y-0">
+            <div className="px-4 space-y-3 pb-6 pt-6 md:p-0 md:grid md:grid-cols-3 md:gap-6 md:space-y-0">
                 {/* 未返信クチコミ */}
                 <ActionCard
                     title="未返信のクチコミ"
