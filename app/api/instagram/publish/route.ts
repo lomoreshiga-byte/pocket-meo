@@ -48,7 +48,31 @@ export async function POST(request: Request) {
         }
 
         const accessToken = integration.access_token
-        const accountId = integration.provider_account_id
+        // Note: provider_account_id in DB *might* be the Facebook User ID (implicit auth).
+        // We must ensure we have the Instagram Business Account ID.
+        // Let's resolve it dynamically using the token to be safe.
+
+        let accountId = integration.provider_account_id
+
+        // Fetch user's pages to find the connected IG account
+        // This is robust: even if DB has wrong ID, this fixes it for the call.
+        const pagesUrl = `https://graph.facebook.com/v19.0/me/accounts`
+        const pagesParams = new URLSearchParams({
+            fields: 'instagram_business_account',
+            access_token: accessToken
+        })
+
+        const pagesRes = await fetch(`${pagesUrl}?${pagesParams.toString()}`)
+        const pagesData = await pagesRes.json()
+
+        if (!pagesData.error && pagesData.data) {
+            const pageWithIg = pagesData.data.find((p: any) => p.instagram_business_account?.id)
+            if (pageWithIg?.instagram_business_account?.id) {
+                accountId = pageWithIg.instagram_business_account.id
+            }
+        }
+
+        // If we still don't have a valid-looking ID, posting might fail, but let's try.
 
         // 4. Instagram Graph API
         // Step A: Create Media Container
