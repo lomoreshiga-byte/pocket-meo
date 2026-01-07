@@ -17,6 +17,21 @@ export default function NewPostPage() {
     const [imageUrl, setImageUrl] = useState<string | null>(null)
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [isUploading, setIsUploading] = useState(false)
+    // State for scheduling
+    const [isScheduling, setIsScheduling] = useState(false)
+    const [scheduledDate, setScheduledDate] = useState('')
+    const [imageFile, setImageFile] = useState<File | null>(null) // New state for the actual file
+
+    // Set default scheduled date to tomorrow same time if empty
+    useEffect(() => {
+        if (isScheduling && !scheduledDate) {
+            const tomorrow = new Date()
+            tomorrow.setDate(tomorrow.getDate() + 1)
+            // Format to YYYY-MM-DDTHH:mm for datetime-local input
+            const localIso = new Date(tomorrow.getTime() - (tomorrow.getTimezoneOffset() * 60000)).toISOString().slice(0, 16)
+            setScheduledDate(localIso)
+        }
+    }, [isScheduling, scheduledDate])
 
     const handleImageUpload = () => {
         fileInputRef.current?.click()
@@ -31,114 +46,131 @@ export default function NewPostPage() {
             return
         }
 
-        setIsUploading(true)
-        try {
-            const fileName = `${Date.now()}-${file.name}`
-            const { data, error } = await supabase.storage
-                .from('posts')
-                .upload(fileName, file)
-
-            if (error) {
-                throw error
-            }
-
-            const { data: { publicUrl } } = supabase.storage
-                .from('posts')
-                .getPublicUrl(fileName)
-
-            setImageUrl(publicUrl)
-        } catch (error: any) {
-            console.error('Upload error:', error)
-            alert('画像のアップロードに失敗しました')
-        } finally {
-            setIsUploading(false)
-            // Reset input
-            if (fileInputRef.current) {
-                fileInputRef.current.value = ''
-            }
+        setImageFile(file) // Store the file itself
+        setImageUrl(URL.createObjectURL(file)) // Create a local URL for preview
+        // Reset input
+        if (fileInputRef.current) {
+            fileInputRef.current.value = ''
         }
     }
 
     const savePost = async (status: 'published' | 'scheduled') => {
+        if (!content.trim() && !imageFile) { // Changed to imageFile
+            alert('本文または画像を入力してください')
+            return
+        }
+
+        if (status === 'scheduled' && !scheduledDate) {
+            alert('予約日時を設定してください')
+            return
+        }
+
         setIsSubmitting(true)
+
         try {
             const { data: { session } } = await supabase.auth.getSession()
-            if (!session?.user) {
-                alert('ログインが必要です')
+            if (!session) { // Changed from session?.user to session
+                alert('ログインしてください')
                 return
             }
 
-            // Publish to Instagram if selected and "Published" status
+            // 画像アップロード
+            let finalImageUrl = imageUrl // Use existing imageUrl if no new file is selected
+            if (imageFile) { // If a new file is selected, upload it
+                setIsUploading(true)
+                const fileExt = imageFile.name.split('.').pop()
+                const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}` // Changed fileName generation
+                const filePath = `${session.user.id}/${fileName}` // Changed filePath generation
+
+                const { error: uploadError } = await supabase.storage
+                    .from('posts')
+                    .upload(filePath, imageFile)
+
+                if (uploadError) throw uploadError
+
+                const { data: { publicUrl } } = supabase.storage
+                    .from('posts')
+                    .getPublicUrl(filePath)
+
+                finalImageUrl = publicUrl
+                setIsUploading(false)
+            }
+
+            // --- INSTAGRAM / GBP PUBLISHING LOGIC ---
+            // Only execute immediate publishing if status is 'published'
             let instagramMediaId = null
-            if (status === 'published' && (platform === 'instagram' || platform === 'both')) {
-                if (!imageUrl) {
-                    alert('Instagramには画像が必須です')
-                    return
-                }
 
-                const res = await fetch('/api/instagram/publish', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${session.access_token}`
-                    },
-                    body: JSON.stringify({
-                        content,
-                        imageUrl
+            if (status === 'published') {
+                if (platform === 'instagram' || platform === 'both') {
+                    if (!finalImageUrl) { // Use finalImageUrl
+                        alert('Instagramには画像が必須です')
+                        return
+                    }
+
+                    const res = await fetch('/api/instagram/publish', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${session.access_token}`
+                        },
+                        body: JSON.stringify({
+                            content,
+                            imageUrl: finalImageUrl // Use finalImageUrl
+                        })
                     })
-                })
 
-                const data = await res.json()
+                    const data = await res.json()
 
-                if (!res.ok) {
-                    throw new Error(data.error || 'Instagramへの投稿に失敗しました')
+                    if (!res.ok) {
+                        throw new Error(data.error || 'Instagramへの投稿に失敗しました')
+                    }
+
+                    instagramMediaId = data.media_id
                 }
 
-                instagramMediaId = data.media_id
+                if (platform === 'gbp' || platform === 'both') {
+                    const res = await fetch('/api/gbp/publish', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${session.access_token}`
+                        },
+                        body: JSON.stringify({
+                            content,
+                            imageUrl: finalImageUrl // Use finalImageUrl
+                        })
+                    })
+
+                    const data = await res.json()
+
+                    if (!res.ok) {
+                        throw new Error(data.error || 'Googleビジネスプロフィールへの投稿に失敗しました')
+                    }
+                }
             }
 
-            // Publish to Google Business Profile if selected and "Published" status
-            if (status === 'published' && (platform === 'gbp' || platform === 'both')) {
-                const res = await fetch('/api/gbp/publish', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${session.access_token}`
-                    },
-                    body: JSON.stringify({
-                        content,
-                        imageUrl
-                    })
-                })
-
-                const data = await res.json()
-
-                if (!res.ok) {
-                    // If Instagram succeeded but Google failed, we should probably warn but not crash everything?
-                    // For now, let's throw to be safe and clear.
-                    throw new Error(data.error || 'Googleビジネスプロフィールへの投稿に失敗しました')
-                }
+            // Save to DB
+            // Calculate proper ISO string for scheduled_at
+            let finalScheduledAt = null
+            if (status === 'scheduled' && scheduledDate) {
+                finalScheduledAt = new Date(scheduledDate).toISOString()
             }
 
-            // Save to Local DB
             const { error } = await supabase
                 .from('posts')
                 .insert({
                     user_id: session.user.id,
                     content: content,
-                    image_url: imageUrl,
+                    image_url: finalImageUrl, // Use finalImageUrl
                     platform: platform,
                     status: status,
-                    scheduled_at: status === 'scheduled' ? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() : null, // 仮：24時間後
+                    scheduled_at: finalScheduledAt,
                     published_at: status === 'published' ? new Date().toISOString() : null,
-                    created_at: new Date().toISOString(),
-                    // Optionally store external ID if column exists (e.g., external_id: instagramMediaId)
+                    external_id: instagramMediaId, // Optional
                 })
 
             if (error) {
                 console.error('Error saving post:', error)
-                // If we published but failed to save DB, it's awkward.
-                // But generally DB save won't fail if we are authenticated.
                 alert(`DB保存エラー: ${error.message}`)
                 return
             }
@@ -153,16 +185,26 @@ export default function NewPostPage() {
             alert(error.message || 'エラーが発生しました')
         } finally {
             setIsSubmitting(false)
+            setIsUploading(false) // Ensure uploading state is reset
         }
     }
 
-    const handlePublish = () => savePost('published')
-    const handleSchedule = () => {
-        // 本来は日付選択モーダルを出すが、今回は仮実装として「予約」ステータスで保存
-        // 日時は一旦現在時刻の24時間後などを自動設定
-        const confirmSchedule = confirm('現在は日時選択機能が未実装のため、自動的に「24時間後」に設定されます。よろしいですか？')
-        if (confirmSchedule) {
+    const handlePublish = () => {
+        if (isScheduling) {
             savePost('scheduled')
+        } else {
+            savePost('published')
+        }
+    }
+
+    // UI Helpers
+    const toggleScheduling = () => {
+        setIsScheduling(!isScheduling)
+        if (!isScheduling) {
+            // Turning ON: Date set by useEffect
+        } else {
+            // Turning OFF
+            setScheduledDate('')
         }
     }
 
@@ -289,33 +331,52 @@ export default function NewPostPage() {
                 </Card>
 
                 {/* アクションボタン */}
-                <div className="space-y-2 pb-4">
+                <div className="flex gap-4">
+                    {/* Schedule Toggle */}
+                    <div className="flex-1">
+                        <Button
+                            variant={isScheduling ? "default" : "outline"}
+                            className={`w-full justify-start ${isScheduling ? 'bg-orange-500 hover:bg-orange-600' : ''}`}
+                            onClick={toggleScheduling}
+                        >
+                            <Calendar className="w-4 h-4 mr-2" />
+                            {isScheduling ? '予約投稿モード' : '日時を指定して予約'}
+                        </Button>
+                    </div>
+                </div>
+
+                {isScheduling && (
+                    <div className="bg-muted/50 p-4 rounded-lg animate-in fade-in slide-in-from-top-2">
+                        <label className="text-sm font-medium mb-2 block">予約日時</label>
+                        <input
+                            type="datetime-local"
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            value={scheduledDate}
+                            onChange={(e) => setScheduledDate(e.target.value)}
+                            min={new Date().toISOString().slice(0, 16)}
+                        />
+                        <p className="text-xs text-muted-foreground mt-2">
+                            指定した日時（10分単位）に自動的に投稿されます。
+                        </p>
+                    </div>
+                )}
+
+                <div className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t md:static md:p-0 md:bg-transparent md:border-t-0">
                     <Button
+                        className={`w-full h-12 text-lg font-bold ${isScheduling ? 'bg-orange-500 hover:bg-orange-600' : 'bg-primary hover:bg-primary/90'}`}
                         onClick={handlePublish}
                         disabled={!content.trim() || isSubmitting || isUploading}
-                        className="w-full h-12"
-                        size="lg"
                     >
                         {isSubmitting ? (
-                            '保存中...'
+                            <>
+                                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                                {isScheduling ? '予約保存中...' : '投稿中...'}
+                            </>
                         ) : (
                             <>
-                                <Send className="w-4 h-4 mr-2" />
-                                今すぐ投稿
-                            </>
-                        )}
-                    </Button>
-
-                    <Button
-                        onClick={handleSchedule}
-                        disabled={!content.trim() || isSubmitting || isUploading}
-                        variant="outline"
-                        className="w-full h-12"
-                        size="lg"
-                    >
-                        <Calendar className="w-4 h-4 mr-2" />
-                        日時を指定して予約
-                    </Button>
+                                <Calendar className="w-4 h-4 mr-2" />
+                                日時を指定して予約
+                            </Button>
                 </div>
             </div>
         </div>
