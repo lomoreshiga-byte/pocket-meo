@@ -62,37 +62,72 @@ export default function NewPostPage() {
     const savePost = async (status: 'published' | 'scheduled') => {
         setIsSubmitting(true)
         try {
-            const { data: { user } } = await supabase.auth.getUser()
-            if (!user) {
+            const { data: { session } } = await supabase.auth.getSession()
+            if (!session?.user) {
                 alert('ログインが必要です')
                 return
             }
 
+            // Publish to Instagram if selected and "Published" status
+            let instagramMediaId = null
+            if (status === 'published' && (platform === 'instagram' || platform === 'both')) {
+                if (!imageUrl) {
+                    alert('Instagramには画像が必須です')
+                    return
+                }
+
+                const res = await fetch('/api/instagram/publish', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session.access_token}`
+                    },
+                    body: JSON.stringify({
+                        content,
+                        imageUrl
+                    })
+                })
+
+                const data = await res.json()
+
+                if (!res.ok) {
+                    throw new Error(data.error || 'Instagramへの投稿に失敗しました')
+                }
+
+                instagramMediaId = data.media_id
+            }
+
+            // Save to Local DB
             const { error } = await supabase
                 .from('posts')
                 .insert({
-                    user_id: user.id,
+                    user_id: session.user.id,
                     content: content,
                     image_url: imageUrl,
                     platform: platform,
                     status: status,
                     scheduled_at: status === 'scheduled' ? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() : null, // 仮：24時間後
                     published_at: status === 'published' ? new Date().toISOString() : null,
-                    created_at: new Date().toISOString()
+                    created_at: new Date().toISOString(),
+                    // Optionally store external ID if column exists (e.g., external_id: instagramMediaId)
                 })
 
             if (error) {
                 console.error('Error saving post:', error)
-                alert(`投稿の保存に失敗しました: ${error.message}`)
+                // If we published but failed to save DB, it's awkward.
+                // But generally DB save won't fail if we are authenticated.
+                alert(`DB保存エラー: ${error.message}`)
                 return
             }
+
+            alert(status === 'published' ? '投稿が完了しました！' : '予約が完了しました！')
 
             // 成功したら一覧に戻る
             router.push('/posts')
             router.refresh()
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error submitting post:', error)
-            alert('エラーが発生しました')
+            alert(error.message || 'エラーが発生しました')
         } finally {
             setIsSubmitting(false)
         }
