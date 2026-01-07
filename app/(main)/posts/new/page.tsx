@@ -97,6 +97,29 @@ export default function NewPostPage() {
                 instagramMediaId = data.media_id
             }
 
+            // Publish to Google Business Profile if selected and "Published" status
+            if (status === 'published' && (platform === 'gbp' || platform === 'both')) {
+                const res = await fetch('/api/gbp/publish', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session.access_token}`
+                    },
+                    body: JSON.stringify({
+                        content,
+                        imageUrl
+                    })
+                })
+
+                const data = await res.json()
+
+                if (!res.ok) {
+                    // If Instagram succeeded but Google failed, we should probably warn but not crash everything?
+                    // For now, let's throw to be safe and clear.
+                    throw new Error(data.error || 'Googleビジネスプロフィールへの投稿に失敗しました')
+                }
+            }
+
             // Save to Local DB
             const { error } = await supabase
                 .from('posts')
