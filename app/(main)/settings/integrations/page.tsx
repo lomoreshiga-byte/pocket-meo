@@ -33,13 +33,29 @@ export default function IntegrationsPage() {
 
                 try {
                     const user = session.user
-                    const fbIdentity = user.identities?.find(i => i.provider === 'facebook')
+
+                    // Fetch the correct Instagram Business Account ID
+                    // 1. Get Facebook Pages
+                    const pagesRes = await fetch(`https://graph.facebook.com/v19.0/me/accounts?fields=instagram_business_account&access_token=${session.provider_token}`)
+                    const pagesData = await pagesRes.json()
+
+                    if (pagesData.error) throw new Error('Facebook Pages Fetch Error: ' + pagesData.error.message)
+
+                    // 2. Find first page with connected Instagram account
+                    // Note: In production, might want to let user select which page/account if multiple.
+                    // For now, take the first one found.
+                    const pageWithIg = pagesData.data?.find((p: any) => p.instagram_business_account?.id)
+                    const instagramAccountId = pageWithIg?.instagram_business_account?.id
+
+                    if (!instagramAccountId) {
+                        throw new Error('リンクされたInstagramビジネスアカウントが見つかりません。FacebookページとInstagramが接続されているか確認してください。')
+                    }
 
                     // Upsert to integrations table
                     const { error } = await supabase.from('integrations').upsert({
                         user_id: user.id,
                         provider: 'instagram',
-                        provider_account_id: fbIdentity?.id || 'unknown',
+                        provider_account_id: instagramAccountId, // Use the correct IG Business ID
                         access_token: session.provider_token,
                         refresh_token: session.provider_refresh_token,
                         updated_at: new Date().toISOString()
@@ -111,7 +127,7 @@ export default function IntegrationsPage() {
             const { data, error } = await supabase.auth.linkIdentity({
                 provider: 'facebook',
                 options: {
-                    scopes: 'instagram_basic,pages_show_list',
+                    scopes: 'instagram_basic,pages_show_list,instagram_content_publish',
                     redirectTo: `${window.location.origin}/settings/integrations` // Implicit flow
                 }
             })
