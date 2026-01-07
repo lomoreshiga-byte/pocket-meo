@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -373,12 +373,15 @@ export default function NewPostPage() {
                                 {isScheduling ? '予約保存中...' : '投稿中...'}
                             </>
                         ) : (
-                            <>
-                                <Calendar className="w-4 h-4 mr-2" />
-                                日時を指定して予約
-                            </Button>
-                </div>
+                        ): (
+                                <>
+                                { isScheduling?<Calendar className = "w-5 h-5 mr-2" /> : <Send className="w-5 h-5 mr-2" />}
+                        {isScheduling ? 'この日時で予約する' : 'すぐに投稿する'}
+                    </>
+                        )}
+                </Button>
             </div>
         </div>
+        </div >
     )
 }
