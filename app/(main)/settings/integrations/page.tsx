@@ -11,6 +11,7 @@ import { useRouter } from 'next/navigation'
 export default function IntegrationsPage() {
     const [loading, setLoading] = useState(true)
     const [instagramLinked, setInstagramLinked] = useState(false)
+    const [googleLinked, setGoogleLinked] = useState(false)
     const [linking, setLinking] = useState(false)
     const [statusMessage, setStatusMessage] = useState<string>('')
     const [error, setError] = useState<string | null>(null)
@@ -24,51 +25,89 @@ export default function IntegrationsPage() {
             console.log('Auth Event:', event)
 
             // Check if we are in the middle of linking
-            const isLinking = localStorage.getItem('linking_instagram') === 'true'
+            const isLinkingIg = localStorage.getItem('linking_instagram') === 'true'
+            const isLinkingGoogle = localStorage.getItem('linking_google') === 'true'
 
-            if (isLinking && session?.provider_token) {
-                // Found a token!
-                setStatusMessage('トークンを検出しました！保存しています...')
-                setLinking(true) // Ensure UI shows loading
+            if (session?.provider_token) {
+                // Determine which provider this token is for
+                // Supabase doesn't explicitly say "this token is for provider X" in the session object easily
+                // BUT we can infer it or just try to save to the one we are linking.
+                const user = session.user
 
-                try {
-                    const user = session.user
-                    const fbIdentity = user.identities?.find(i => i.provider === 'facebook')
+                if (isLinkingIg) {
+                    // ... Instagram logic (existing) ...
+                    // (Keep existing IG logic here, just indented)
+                    setStatusMessage('Instagramトークンを検出しました！保存しています...')
+                    setLinking(true)
+                    try {
+                        const fbIdentity = user.identities?.find(i => i.provider === 'facebook')
 
-                    // Upsert to integrations table
-                    // Note: We save the token here. The server-side API will handle resolving the correct
-                    // Instagram Business Account ID using this token, so we don't need to do complex fetching here.
-                    const { error } = await supabase.from('integrations').upsert({
-                        user_id: user.id,
-                        provider: 'instagram',
-                        provider_account_id: fbIdentity?.id || 'unknown',
-                        access_token: session.provider_token,
-                        refresh_token: session.provider_refresh_token,
-                        updated_at: new Date().toISOString()
-                    }, { onConflict: 'user_id, provider' })
+                        // Fetch the correct Instagram Business Account ID
+                        const pagesRes = await fetch(`https://graph.facebook.com/v19.0/me/accounts?fields=instagram_business_account&access_token=${session.provider_token}`)
+                        const pagesData = await pagesRes.json()
+                        // ... (Rest of IG logic)
+                        if (pagesData.error) throw new Error('Facebook Pages Fetch Error: ' + pagesData.error.message)
+                        const pageWithIg = pagesData.data?.find((p: any) => p.instagram_business_account?.id)
+                        const instagramAccountId = pageWithIg?.instagram_business_account?.id
+                        if (!instagramAccountId) throw new Error('リンクされたInstagramビジネスアカウントが見つかりません。')
 
-                    if (error) throw error
+                        const { error } = await supabase.from('integrations').upsert({
+                            user_id: user.id,
+                            provider: 'instagram',
+                            provider_account_id: fbIdentity?.id || 'unknown', // Server resolves real ID
+                            access_token: session.provider_token,
+                            refresh_token: session.provider_refresh_token,
+                            updated_at: new Date().toISOString()
+                        }, { onConflict: 'user_id, provider' })
 
-                    // Cleanup
-                    localStorage.removeItem('linking_instagram')
+                        if (error) throw error
+                        localStorage.removeItem('linking_instagram')
+                        setInstagramLinked(true)
+                        setStatusMessage('Instagram保存成功！')
+                        alert('Instagram連携が完了しました！')
+                        window.history.replaceState(null, '', window.location.pathname)
+                    } catch (err: any) {
+                        console.error(err)
+                        setError('Instagram連携エラー: ' + err.message)
+                    } finally {
+                        setLinking(false)
+                    }
 
-                    setInstagramLinked(true)
-                    setStatusMessage('保存に成功しました！')
-                    alert('Instagram連携が完了しました！')
+                } else if (isLinkingGoogle) {
+                    // Google Logic
+                    setStatusMessage('Googleトークンを検出しました！保存しています...')
+                    setLinking(true)
+                    try {
+                        // For Google, simply save the token. 
+                        // We will resolve Account/Location dynamically on the server API side.
+                        const { error } = await supabase.from('integrations').upsert({
+                            user_id: user.id,
+                            provider: 'google',
+                            provider_account_id: 'auto_resolving', // Placeholder
+                            access_token: session.provider_token,
+                            refresh_token: session.provider_refresh_token,
+                            updated_at: new Date().toISOString()
+                        }, { onConflict: 'user_id, provider' })
 
-                    // Clear hash from URL cleanly
-                    window.history.replaceState(null, '', window.location.pathname)
-
-                } catch (err: any) {
-                    console.error('Token save error:', err)
-                    setError('トークンの保存に失敗しました: ' + err.message)
-                } finally {
-                    setLinking(false)
+                        if (error) throw error
+                        localStorage.removeItem('linking_google')
+                        setGoogleLinked(true)
+                        setStatusMessage('Google保存成功！')
+                        alert('Google連携が完了しました！')
+                        window.history.replaceState(null, '', window.location.pathname)
+                    } catch (err: any) {
+                        console.error(err)
+                        setError('Google連携エラー: ' + err.message)
+                    } finally {
+                        setLinking(false)
+                    }
                 }
-            } else if (isLinking && event === 'SIGNED_IN' && !session?.provider_token) {
+            } else if (isLinkingIg && event === 'SIGNED_IN' && !session?.provider_token) {
                 // Signed in by redirect but no token? (Maybe existing session used?)
-                console.warn('Redirected back but no token found in session object')
+                console.warn('Redirected back but no token found in session object for Instagram')
                 // Don't clear flag yet, maybe next event has it?
+            } else if (isLinkingGoogle && event === 'SIGNED_IN' && !session?.provider_token) {
+                console.warn('Redirected back but no token found in session object for Google')
             }
         })
 
@@ -80,25 +119,65 @@ export default function IntegrationsPage() {
     const checkConnection = async () => {
         try {
             const { data: { session } } = await supabase.auth.getSession()
-            if (session?.user?.identities) {
-                // Facebook identityがあるか確認
-                const fbIdentity = session.user.identities.find(
-                    (identity) => identity.provider === 'facebook'
-                )
-                // Also check if we have the token in DB (double check)
-                const { data: integration } = await supabase
-                    .from('integrations')
-                    .select('id')
-                    .eq('user_id', session.user.id)
-                    .eq('provider', 'instagram')
-                    .single()
+            if (session?.user) {
+                const user = session.user
+                // Check Instagram
+                const fbIdentity = user.identities?.find(i => i.provider === 'facebook')
+                const { data: igInt } = await supabase.from('integrations').select('id').eq('user_id', user.id).eq('provider', 'instagram').single()
+                setInstagramLinked(!!fbIdentity && !!igInt)
 
-                setInstagramLinked(!!fbIdentity && !!integration)
+                // Check Google
+                // For Google, we look for 'integration' row with provider='google'
+                const { data: googleInt } = await supabase.from('integrations').select('id').eq('user_id', user.id).eq('provider', 'google').single()
+                setGoogleLinked(!!googleInt)
             }
         } catch (err) {
             console.error('Error checking connection:', err)
         } finally {
             setLoading(false)
+        }
+    }
+
+    const handleConnectGoogle = async () => {
+        setLinking(true)
+        setError(null)
+        localStorage.setItem('linking_google', 'true')
+        try {
+            // Re-authenticate with Google/Update scopes
+            const { error } = await supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    scopes: 'https://www.googleapis.com/auth/business.manage',
+                    queryParams: {
+                        access_type: 'offline', // Important for refresh token
+                        prompt: 'consent',
+                    },
+                    redirectTo: `${window.location.origin}/settings/integrations`
+                }
+            })
+            if (error) throw error
+        } catch (err: any) {
+            console.error('Google connect error:', err)
+            setError(err.message)
+            setLinking(false)
+            localStorage.removeItem('linking_google')
+        }
+    }
+
+    const handleDisconnectGoogle = async () => {
+        if (!confirm('Google連携を解除しますか？')) return
+        setLinking(true)
+        try {
+            const { data: { user } } = await supabase.auth.getUser()
+            if (user) {
+                await supabase.from('integrations').delete().eq('user_id', user.id).eq('provider', 'google')
+                setGoogleLinked(false)
+                alert('Google連携を解除しました')
+            }
+        } catch (err: any) {
+            setError(err.message)
+        } finally {
+            setLinking(false)
         }
     }
 
@@ -180,8 +259,9 @@ export default function IntegrationsPage() {
 
             <div className="p-4 space-y-6">
                 {/* Google Business Profile */}
+                {/* Google Business Profile */}
                 <section>
-                    <Card>
+                    <Card className={googleLinked ? 'border-green-500/50' : ''}>
                         <CardHeader className="pb-3">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
@@ -196,13 +276,52 @@ export default function IntegrationsPage() {
                                     <div>
                                         <CardTitle className="text-base">Google ビジネス</CardTitle>
                                         <CardDescription className="text-sm">
-                                            ログイン済み
+                                            {googleLinked ? '連携済み' : '未連携'}
                                         </CardDescription>
                                     </div>
                                 </div>
-                                <Badge variant="default" className="bg-green-600">連携中</Badge>
+                                {googleLinked && <Badge variant="default" className="bg-green-600">連携中</Badge>}
                             </div>
                         </CardHeader>
+                        <CardContent>
+                            <div className="space-y-4">
+                                <p className="text-sm text-muted-foreground">
+                                    Googleマップ（ビジネスプロフィール）に投稿したり、クチコミを取得するために連携が必要です。
+                                </p>
+
+                                {!googleLinked ? (
+                                    <Button
+                                        onClick={handleConnectGoogle}
+                                        disabled={linking}
+                                        className="w-full bg-[#4285F4] hover:bg-[#3367D6]"
+                                    >
+                                        {linking && localStorage.getItem('linking_google') ? (
+                                            <>
+                                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                                接続中...
+                                            </>
+                                        ) : (
+                                            'Googleと連携する'
+                                        )}
+                                    </Button>
+                                ) : (
+                                    <div className="flex flex-col gap-3">
+                                        <div className="flex items-center gap-2 text-sm text-green-600">
+                                            <CheckCircle2 className="w-4 h-4" />
+                                            <span>正常に接続されています</span>
+                                        </div>
+                                        <Button
+                                            variant="outline"
+                                            className="w-full text-destructive hover:text-destructive hover:bg-destructive/10"
+                                            onClick={handleDisconnectGoogle}
+                                            disabled={linking}
+                                        >
+                                            {linking ? '解除中...' : '連携を解除して再接続する'}
+                                        </Button>
+                                    </div>
+                                )}
+                            </div>
+                        </CardContent>
                     </Card>
                 </section>
 
