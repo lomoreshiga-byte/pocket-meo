@@ -157,18 +157,6 @@ export default function PostsClient({
                     </div>
                 )}
 
-                {/* Temporary Debug Info */}
-                <div className="p-4 bg-gray-100 rounded text-xs font-mono break-all mt-4">
-                    {/* Hidden by default now, can enable for debugging */}
-                    <p className="font-bold">Debug Info:</p>
-                    <p>User ID: {userId || 'NULL'}</p>
-                    <p>Google Token: {googleToken ? 'YES' : 'NO'}</p>
-                    <p>IG Token: {instagramToken ? 'YES' : 'NO'}</p>
-                    <p>IG Posts: {igPosts.length}</p>
-                    <p>Cookies: {debugCookies?.join(', ') || 'None'}</p>
-                    <p>DB Rows: {debugIntegrations?.join(', ') || 'None'}</p>
-                </div>
-
                 {!refreshing && igPosts.length === 0 && !serverError && (
                     <div className="bg-blue-50 text-blue-700 text-sm p-3 rounded-md flex items-center gap-2">
                         <AlertCircle className="w-4 h-4" />
