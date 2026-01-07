@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+import { publishToInstagram } from '@/lib/instagram'
 
 // Use Edge Runtime for better performance if possible, but Node is safer for heavy requests.
 // Let's stick to Node for now to ensure compatibility with all libs if needed.
@@ -48,101 +49,17 @@ export async function POST(request: Request) {
         }
 
         const accessToken = integration.access_token
-        // Note: provider_account_id in DB *might* be the Facebook User ID (implicit auth).
-        // We must ensure we have the Instagram Business Account ID.
-        // Let's resolve it dynamically using the token to be safe.
-
-        let accountId = integration.provider_account_id
-
-        // Fetch user's pages to find the connected IG account
-        // This is robust: even if DB has wrong ID, this fixes it for the call.
-        const pagesUrl = `https://graph.facebook.com/v19.0/me/accounts`
-        const pagesParams = new URLSearchParams({
-            fields: 'instagram_business_account',
-            access_token: accessToken
-        })
-
-        const pagesRes = await fetch(`${pagesUrl}?${pagesParams.toString()}`)
-        const pagesData = await pagesRes.json()
-
-        if (!pagesData.error && pagesData.data) {
-            const pageWithIg = pagesData.data.find((p: any) => p.instagram_business_account?.id)
-            if (pageWithIg?.instagram_business_account?.id) {
-                accountId = pageWithIg.instagram_business_account.id
-            }
-        }
-
-        // If we still don't have a valid-looking ID, posting might fail, but let's try.
-
-        // 4. Instagram Graph API
-        // Step A: Create Media Container
-        const containerUrl = `https://graph.facebook.com/v19.0/${accountId}/media`
-        const containerParams = new URLSearchParams({
-            image_url: imageUrl,
-            caption: content || '',
-            access_token: accessToken
-        })
-
-        const containerRes = await fetch(`${containerUrl}?${containerParams.toString()}`, { method: 'POST' })
-        const containerData = await containerRes.json()
-
-        if (containerData.error) {
-            console.error('IG Container Error:', containerData.error)
-            throw new Error(`Instagram API Error (Create): ${containerData.error.message}`)
-        }
-
-        const creationId = containerData.id
-
-        // Step A.5: Wait for Media to be Ready (Polling)
-        // Instagram needs time to download the image. We must check status.
-        let attempts = 0
-        const maxAttempts = 10
-        let isReady = false
-
-        while (attempts < maxAttempts && !isReady) {
-            // Wait 2 seconds
-            await new Promise(resolve => setTimeout(resolve, 2000))
-            attempts++
-
-            const statusUrl = `https://graph.facebook.com/v19.0/${creationId}`
-            const statusParams = new URLSearchParams({
-                fields: 'status_code',
-                access_token: accessToken
-            })
-            const statusRes = await fetch(`${statusUrl}?${statusParams.toString()}`)
-            const statusData = await statusRes.json()
-
-            if (statusData.status_code === 'FINISHED') {
-                isReady = true
-            } else if (statusData.status_code === 'ERROR') {
-                throw new Error('Instagram failed to process the image.')
-            }
-            // If IN_PROGRESS, loop again
-        }
-
-        if (!isReady) {
-            throw new Error('Instagram processing timed out. Please try again.')
-        }
-
-        // Step B: Publish Media
-        const publishUrl = `https://graph.facebook.com/v19.0/${accountId}/media_publish`
-        const publishParams = new URLSearchParams({
-            creation_id: creationId,
-            access_token: accessToken
-        })
-
-        const publishRes = await fetch(`${publishUrl}?${publishParams.toString()}`, { method: 'POST' })
-        const publishData = await publishRes.json()
-
-        if (publishData.error) {
-            console.error('IG Publish Error:', publishData.error)
-            throw new Error(`Instagram API Error (Publish): ${publishData.error.message}`)
-        }
+        // 4. Publish using shared library
+        const result = await publishToInstagram(
+            accessToken,
+            integration.provider_account_id,
+            imageUrl,
+            content
+        )
 
         return NextResponse.json({
             success: true,
-            media_id: publishData.id,
-            permalink: `https://www.instagram.com/p/${publishData.id}/` // Construct theoretical link or just ID
+            media_id: result.id,
         })
 
     } catch (error: any) {
